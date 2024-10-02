@@ -1,0 +1,455 @@
+# Copyright (C) 2021 Post Sliders & Post Grids
+# This file is distributed under the same license as the Post Sliders & Post Grids package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Post Sliders & Post Grids 1.0.17\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/post-slider-"
+"carousel\n"
+"POT-Creation-Date: 2021-08-22 11:42:41+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2021-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: post-slider-carousel.php:233
+msgid "Post Slider Carousel is active but does not have write permission on"
+msgstr ""
+
+#: post-slider-carousel.php:233
+msgid " directory.Please allow write permission."
+msgstr ""
+
+#: post-slider-carousel.php:239
+msgid ""
+"Post Slider Carousel is active but plugin does not have permission to create "
+"directory"
+msgstr ""
+
+#: post-slider-carousel.php:239
+msgid ""
+".Please create post-slider-carousel directory inside upload directory and "
+"allow write permission."
+msgstr ""
+
+#: post-slider-carousel.php:362
+msgid "Post Slider & Grid"
+msgstr ""
+
+#: post-slider-carousel.php:363
+msgid "Preview Slider"
+msgstr ""
+
+#: post-slider-carousel.php:364 post-slider-carousel.php:1555
+msgid "Post Grid Settings"
+msgstr ""
+
+#: post-slider-carousel.php:365
+msgid "Preview Post Grid"
+msgstr ""
+
+#: post-slider-carousel.php:394 post-slider-carousel.php:1316
+#: post-slider-carousel.php:2125 post-slider-carousel.php:2197
+msgid "Access Denied"
+msgstr ""
+
+#: post-slider-carousel.php:650 post-slider-carousel.php:1554
+msgid "UPGRADE TO PRO VERSION"
+msgstr ""
+
+#: post-slider-carousel.php:651 post-slider-carousel.php:658
+msgid "Slider Settings"
+msgstr ""
+
+#: post-slider-carousel.php:663
+msgid "Show Caption ?"
+msgstr ""
+
+#: post-slider-carousel.php:670 post-slider-carousel.php:690
+#: post-slider-carousel.php:1949
+msgid "Yes"
+msgstr ""
+
+#: post-slider-carousel.php:672 post-slider-carousel.php:692
+#: post-slider-carousel.php:1951
+msgid "No"
+msgstr ""
+
+#: post-slider-carousel.php:683 post-slider-carousel.php:1942
+msgid "Show Pager ?"
+msgstr ""
+
+#: post-slider-carousel.php:703
+msgid "Slider Background color"
+msgstr ""
+
+#: post-slider-carousel.php:719 post-slider-carousel.php:726
+msgid "Circular Slider ?"
+msgstr ""
+
+#: post-slider-carousel.php:737 post-slider-carousel.php:744
+msgid "Pause On Mouse Over ?"
+msgstr ""
+
+#: post-slider-carousel.php:754
+msgid "Auto Scroll ?"
+msgstr ""
+
+#: post-slider-carousel.php:761
+msgid "Auto"
+msgstr ""
+
+#: post-slider-carousel.php:763
+msgid "Scroll By Left & Right Arrow"
+msgstr ""
+
+#: post-slider-carousel.php:765
+msgid "Scroll Auto With Arrow"
+msgstr ""
+
+#: post-slider-carousel.php:776
+msgid "Speed"
+msgstr ""
+
+#: post-slider-carousel.php:782 post-slider-carousel.php:798
+msgid "Example 1000"
+msgstr ""
+
+#: post-slider-carousel.php:792
+msgid "Pause"
+msgstr ""
+
+#: post-slider-carousel.php:803
+msgid "The amount of time (in ms) between each auto transition"
+msgstr ""
+
+#: post-slider-carousel.php:809 post-slider-carousel.php:1563
+msgid "Post Settings"
+msgstr ""
+
+#: post-slider-carousel.php:811
+msgid "Min Post"
+msgstr ""
+
+#: post-slider-carousel.php:817
+msgid ""
+"This will decide your slider width in responsive layout.It will show number "
+"of post at time.For example 2"
+msgstr ""
+
+#: post-slider-carousel.php:828
+msgid "Max Post"
+msgstr ""
+
+#: post-slider-carousel.php:834
+msgid ""
+"This will decide your slider width automatically.It will show number of post "
+"at time.For example 5"
+msgstr ""
+
+#: post-slider-carousel.php:839
+msgid "specifies the number of items visible at all times within the slider."
+msgstr ""
+
+#: post-slider-carousel.php:846 post-slider-carousel.php:1750
+msgid "Maximum Post To be Retrieve From"
+msgstr ""
+
+#: post-slider-carousel.php:852
+msgid "-1 will retrieve all post from wp_query"
+msgstr ""
+
+#: post-slider-carousel.php:857 post-slider-carousel.php:1761
+msgid "specifies the number of post to be retrieved from WP_Query"
+msgstr ""
+
+#: post-slider-carousel.php:864 post-slider-carousel.php:1767
+msgid "Post Types exclude or include?"
+msgstr ""
+
+#: post-slider-carousel.php:870 post-slider-carousel.php:923
+#: post-slider-carousel.php:1773 post-slider-carousel.php:1826
+msgid "Include"
+msgstr ""
+
+#: post-slider-carousel.php:871 post-slider-carousel.php:924
+#: post-slider-carousel.php:1774 post-slider-carousel.php:1827
+msgid "Exclude"
+msgstr ""
+
+#: post-slider-carousel.php:879 post-slider-carousel.php:1782
+msgid "Post Types to Include"
+msgstr ""
+
+#: post-slider-carousel.php:880 post-slider-carousel.php:1783
+msgid "Post Types to Exclude"
+msgstr ""
+
+#: post-slider-carousel.php:899 post-slider-carousel.php:1802
+msgid "Select"
+msgstr ""
+
+#: post-slider-carousel.php:917 post-slider-carousel.php:1820
+msgid "Categories to exclude or include?"
+msgstr ""
+
+#: post-slider-carousel.php:933 post-slider-carousel.php:1836
+msgid "Categories To Include"
+msgstr ""
+
+#: post-slider-carousel.php:934 post-slider-carousel.php:1837
+msgid "Categories To Exclude"
+msgstr ""
+
+#: post-slider-carousel.php:977 post-slider-carousel.php:1881
+msgid "Posts To Exclude"
+msgstr ""
+
+#: post-slider-carousel.php:988
+msgid "comma separated post id's to exclude."
+msgstr ""
+
+#: post-slider-carousel.php:994 post-slider-carousel.php:1898
+msgid "Sort By"
+msgstr ""
+
+#: post-slider-carousel.php:1000 post-slider-carousel.php:1904
+msgid "Date"
+msgstr ""
+
+#: post-slider-carousel.php:1001 post-slider-carousel.php:1905
+msgid "ID"
+msgstr ""
+
+#: post-slider-carousel.php:1002 post-slider-carousel.php:1906
+msgid "Author"
+msgstr ""
+
+#: post-slider-carousel.php:1003 post-slider-carousel.php:1907
+msgid "Title"
+msgstr ""
+
+#: post-slider-carousel.php:1004 post-slider-carousel.php:1908
+msgid "Name"
+msgstr ""
+
+#: post-slider-carousel.php:1005 post-slider-carousel.php:1909
+msgid "Random"
+msgstr ""
+
+#: post-slider-carousel.php:1006 post-slider-carousel.php:1910
+msgid "Menu order"
+msgstr ""
+
+#: post-slider-carousel.php:1007 post-slider-carousel.php:1911
+msgid "Comment count"
+msgstr ""
+
+#: post-slider-carousel.php:1019 post-slider-carousel.php:1923
+msgid "Sort Direction"
+msgstr ""
+
+#: post-slider-carousel.php:1025 post-slider-carousel.php:1929
+msgid "Ascending"
+msgstr ""
+
+#: post-slider-carousel.php:1026 post-slider-carousel.php:1930
+msgid "Descending"
+msgstr ""
+
+#: post-slider-carousel.php:1040
+msgid "Image Settings"
+msgstr ""
+
+#: post-slider-carousel.php:1042
+msgid "Link images with url ?"
+msgstr ""
+
+#: post-slider-carousel.php:1049
+msgid "Add link to image ?"
+msgstr ""
+
+#: post-slider-carousel.php:1050
+msgid "Add link to image? On click user will redirect to post url"
+msgstr ""
+
+#: post-slider-carousel.php:1059
+msgid "Open Post Link In New Tab ?"
+msgstr ""
+
+#: post-slider-carousel.php:1066
+msgid "Open Link In New Tab? "
+msgstr ""
+
+#: post-slider-carousel.php:1076
+msgid "Thumbnail Image Height"
+msgstr ""
+
+#: post-slider-carousel.php:1092
+msgid "Thumbnail Image Width"
+msgstr ""
+
+#: post-slider-carousel.php:1110
+msgid "Scroll"
+msgstr ""
+
+#: post-slider-carousel.php:1121
+msgid ""
+"You can specify the number of items to scroll when you click the next or "
+"prev buttons."
+msgstr ""
+
+#: post-slider-carousel.php:1128
+msgid "Image Margin"
+msgstr ""
+
+#: post-slider-carousel.php:1134
+msgid "Gap between two images"
+msgstr ""
+
+#: post-slider-carousel.php:1146 post-slider-carousel.php:1964
+msgid "Save Changes"
+msgstr ""
+
+#: post-slider-carousel.php:1285 post-slider-carousel.php:2095
+msgid "Access All Themes In One Price"
+msgstr ""
+
+#: post-slider-carousel.php:1294 post-slider-carousel.php:2104
+msgid "Google For Business Coupon"
+msgstr ""
+
+#: post-slider-carousel.php:1566
+msgid "Post Grid Columns"
+msgstr ""
+
+#: post-slider-carousel.php:1572 post-slider-carousel.php:1594
+#: post-slider-carousel.php:1616 post-slider-carousel.php:1638
+msgid "1"
+msgstr ""
+
+#: post-slider-carousel.php:1573 post-slider-carousel.php:1595
+#: post-slider-carousel.php:1617 post-slider-carousel.php:1639
+msgid "2"
+msgstr ""
+
+#: post-slider-carousel.php:1574 post-slider-carousel.php:1596
+#: post-slider-carousel.php:1618 post-slider-carousel.php:1640
+msgid "3"
+msgstr ""
+
+#: post-slider-carousel.php:1575 post-slider-carousel.php:1597
+#: post-slider-carousel.php:1619 post-slider-carousel.php:1641
+msgid "4"
+msgstr ""
+
+#: post-slider-carousel.php:1576 post-slider-carousel.php:1598
+#: post-slider-carousel.php:1620
+msgid "5"
+msgstr ""
+
+#: post-slider-carousel.php:1588
+msgid "Post Grid Columns (1024)"
+msgstr ""
+
+#: post-slider-carousel.php:1610
+msgid "Post Grid Columns (800)"
+msgstr ""
+
+#: post-slider-carousel.php:1632
+msgid "Post Grid Columns (640)"
+msgstr ""
+
+#: post-slider-carousel.php:1642
+msgid "6"
+msgstr ""
+
+#: post-slider-carousel.php:1654
+msgid "Heading Color"
+msgstr ""
+
+#: post-slider-carousel.php:1670
+msgid "Post Meta Color"
+msgstr ""
+
+#: post-slider-carousel.php:1686
+msgid "Content Color"
+msgstr ""
+
+#: post-slider-carousel.php:1702
+msgid "Readmore Color"
+msgstr ""
+
+#: post-slider-carousel.php:1718
+msgid "Readmore Hover Color"
+msgstr ""
+
+#: post-slider-carousel.php:1734
+msgid "Read More Text"
+msgstr ""
+
+#: post-slider-carousel.php:1740
+msgid "Translate Readmore to your language"
+msgstr ""
+
+#: post-slider-carousel.php:1756
+msgid ""
+"-1 will retrieve all post from wp_query. If you would like to show "
+"pagination, then set page size and set pagination to true below last option."
+msgstr ""
+
+#: post-slider-carousel.php:1892
+msgid "comma separated post id's to exclude. "
+msgstr ""
+
+#: post-slider-carousel.php:2161
+msgid "Slider Preview"
+msgstr ""
+
+#: post-slider-carousel.php:2178
+msgid "To print this slider into WordPress Post/Page use below code"
+msgstr ""
+
+#: post-slider-carousel.php:2181
+msgid ""
+"To print this slider into WordPress theme/template PHP files use below code"
+msgstr ""
+
+#: post-slider-carousel.php:2208
+msgid "Post Grid Preview"
+msgstr ""
+
+#: post-slider-carousel.php:2221
+msgid "To print this post grid into WordPress Post/Page use below code"
+msgstr ""
+
+#: post-slider-carousel.php:2224
+msgid ""
+"To print this post grid into WordPress theme/template PHP files use below "
+"code"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Post Sliders & Post Grids"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid ""
+"https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"Post Sliders and Grids is beautiful responsive post thumbnail image slider "
+"as well as post grid.It support post exclusion,Categort exclusion and also "
+"support custom post type."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "I Thirteen Web Solution"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://www.i13websolution.com/"
+msgstr ""
