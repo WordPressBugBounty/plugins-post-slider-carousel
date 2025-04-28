@@ -5,7 +5,7 @@
   Author URI:https://www.i13websolution.com/
   Description:Post Sliders and Grids is beautiful responsive post thumbnail image slider as well as post grid.It support post exclusion,Categort exclusion and also support custom post type.
   Author:I Thirteen Web Solution
-  Version:1.0.21
+  Version:1.0.22
   Text Domain:post-slider-carousel
   Domain Path: /languages
  */
@@ -2633,16 +2633,16 @@ function psc_get_no_img_url( $imageheight, $imagewidth, $grid = false ) {
 
 		$extension = 'jpg';
 		$filenamewithoutextension = 'no-image-available';
-		$imagetoCheck = "$pathToImagesFolder/no-image-available_$imageheight_$imagewidth.$extension";
-		$imagetoCheckSmall = "$pathToImagesFolder/no-image-available_$imageheight_$imagewidth." . strtolower( $extension );
+		$imagetoCheck = "$pathToImagesFolder/no-image-available_".$imageheight."_"."$imagewidth.$extension";
+		$imagetoCheckSmall = "$pathToImagesFolder/no-image-available_".$imageheight."_"."$imagewidth." . strtolower( $extension );
 	} else {
 			$image = plugin_dir_path( __FILE__ ) . 'images/no-image-available-grid.jpg';
 			$image = str_replace( '\\', '/', $image );
 
 			$extension = 'jpg';
 			$filenamewithoutextension = 'no-image-available-grid';
-			$imagetoCheck = "$pathToImagesFolder/no-image-available-grid_$imageheight_$imagewidth.$extension";
-			$imagetoCheckSmall = "$pathToImagesFolder/no-image-available-grid_$imageheight_$imagewidth." . strtolower( $extension );
+			$imagetoCheck = "$pathToImagesFolder/no-image-available-grid_".$imageheight."_"."$imagewidth.$extension";
+			$imagetoCheckSmall = "$pathToImagesFolder/no-image-available-grid_".$imageheight."_"."$imagewidth." . strtolower( $extension );
 	}
 	if ( file_exists( $imagetoCheck ) ) {
 

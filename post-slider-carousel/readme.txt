@@ -4,9 +4,9 @@ Contributors:nik00726
 Donate link:http://www.i13websolution.com/donate-wordpress_image_thumbnail.php
 Tags:Post Grid,Custom Post Grid,post Grid Display,latest post slider,advance post slider,post thumbnail slider,responsive recent post slider,recent post slider,responsive post slider,post carousel,responsive posts carousel,post carousel widget,post thumbnail slider
 Requires at least:3.5
-Tested up to:6.7
-Version:1.0.21
-Stable tag:1.0.21
+Tested up to:6.8
+Version:1.0.22
+Stable tag:1.0.22
 License:GPLv2 or later
 License URI:http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -175,6 +175,11 @@ This plugin is free for everyone! Since it's released under the GPL, you can use
 
 
 == Changelog ==
+
+= 1.0.22 =
+
+* Fixed issue Undefined variable $imageheight_
+
 
 = 1.0.21 =
 
