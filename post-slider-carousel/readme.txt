@@ -4,7 +4,7 @@ Contributors:nik00726
 Donate link:http://www.i13websolution.com/donate-wordpress_image_thumbnail.php
 Tags:Post Grid,Custom Post Grid,post Grid Display,latest post slider,advance post slider,post thumbnail slider,responsive recent post slider,recent post slider,responsive post slider,post carousel,responsive posts carousel,post carousel widget,post thumbnail slider
 Requires at least:3.5
-Tested up to:6.8
+Tested up to:6.9
 Version:1.0.22
 Stable tag:1.0.22
 License:GPLv2 or later
