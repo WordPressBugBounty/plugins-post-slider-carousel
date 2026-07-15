@@ -1357,8 +1357,29 @@
       if (slider.viewport.get(0).releasePointerCapture) {
         slider.viewport.get(0).releasePointerCapture(slider.pointerId);
       }
+      // Mobile tap fix: treat small movement on BOTH axes as a tap and navigate directly.
+      // jQuery synthetic clicks don't reliably follow anchor hrefs on touch devices,
+      // and requiring hasMove===false / start.x==end.x fails on real devices due to finger jitter.
+      var psc_moveX = Math.abs(slider.touch.end.x - slider.touch.start.x);
+      var psc_moveY = Math.abs(slider.touch.end.y - slider.touch.start.y);
+      if (('ontouchstart' in window) && slider.originalEventType === 'touchstart' && psc_moveX <= 10 && psc_moveY <= 10) {
+          var psc_link = $(slider.originalClickTarget).closest('a');
+          if (psc_link.length && psc_link.attr('href')) {
+              if (psc_link.attr('target') === '_blank') {
+                  window.open(psc_link.attr('href'), '_blank');
+              } else {
+                  window.location.href = psc_link.attr('href');
+              }
+          } else {
+              $(slider.originalClickTarget).trigger({
+                  type: 'click',
+                  button: slider.originalClickButton,
+                  buttons: slider.originalClickButtons
+              });
+          }
+      }
       // if slider had swipe with left mouse, touch contact and pen contact
-      if (slider.hasMove === false && (slider.originalClickButton === 0 || slider.originalEventType === 'touchstart')) {
+      else if (slider.hasMove === false && (slider.originalClickButton === 0 || slider.originalEventType === 'touchstart')) {
         // trigger click event (fix for Firefox59 and PointerEvent standard compatibility)
            if ('ontouchstart' in window) {
 		$(slider.originalClickTarget).trigger({

@@ -5,7 +5,7 @@
   Author URI:https://www.i13websolution.com/
   Description:Post Sliders and Grids is beautiful responsive post thumbnail image slider as well as post grid.It support post exclusion,Categort exclusion and also support custom post type.
   Author:I Thirteen Web Solution
-  Version:1.0.22
+  Version:1.0.23
   Text Domain:post-slider-carousel
   Domain Path: /languages
  */
@@ -22,6 +22,11 @@ add_shortcode( 'psc_print_post_grid', 'psc_print_post_grid_func' );
 add_action( 'admin_notices', 'psc_post_slider_carousel_admin_notices' );
 add_filter( 'user_has_cap', 'psc_post_slider_and_grid_admin_cap_list', 10, 4 );
 add_action( 'plugins_loaded', 'psc_post_slider_carousel_load_lang' );
+add_action( 'plugins_loaded', 'psc_check_db_upgrade' );
+add_action( 'init', 'psc_register_post_slider_grid_block' );
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'psc_plugin_action_links' );
+add_action( 'admin_notices', 'psc_review_request_notice' );
+add_action( 'admin_init', 'psc_handle_review_notice_actions' );
 
 function psc_my_Categ_tree( $termID, $post_categorySelected, $TermName = '', $separator = '', $parent_shown = true ) {
 
@@ -234,13 +239,59 @@ function psc_post_slider_carousel_load_styles_and_js() {
 		wp_register_style( 'font-awesome.min', plugins_url( '/css/font-awesome/css/font-awesome.min.css', __FILE__ ), array(), '1.0.12' );
 		wp_register_script( 'p_s_c_bx', plugins_url( '/js/p_s_c_bx.js', __FILE__ ), array( 'jquery' ), '1.0.15' );
 		wp_register_script( 'psc_grid_min', plugins_url( '/js/psc_grid_min.js', __FILE__ ), array( 'jquery' ), '1.0.18' );
+		wp_register_script( 'psc_filter', plugins_url( '/js/psc_filter.js', __FILE__ ), array( 'jquery', 'psc_grid_min' ), '1.0.23', true );
+
+		// Enqueue and localise here, inside wp_enqueue_scripts. Doing it from the
+		// shortcode (which runs while the body is being built) is too late for
+		// wp_localize_script to attach the data object reliably.
+		$psc_grid_opts_for_filter = get_option( 'psc_pgrid_settings' );
+		if ( is_array( $psc_grid_opts_for_filter ) && ! empty( $psc_grid_opts_for_filter['show_filter'] ) ) {
+
+			wp_enqueue_script( 'psc_filter' );
+			wp_localize_script(
+				'psc_filter',
+				'psc_filter_vars',
+				array(
+					'ajaxurl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'psc_filter_grid' ),
+				)
+			);
+		}
 
 	}
+}
+
+if ( ! defined( 'PSC_DB_VERSION' ) ) {
+
+	define( 'PSC_DB_VERSION', '1.0.23' );
+}
+
+function psc_check_db_upgrade() {
+
+	$psc_installed_version = get_option( 'psc_db_version' );
+
+	if ( PSC_DB_VERSION === $psc_installed_version ) {
+
+		return;
+	}
+
+	// Plugin updates do not fire the activation hook, so run the installer here.
+	// It only fills in missing option keys, so it is safe to run repeatedly.
+	psc_install_post_slider_carousel();
+
+	update_option( 'psc_db_version', PSC_DB_VERSION );
 }
 
 function psc_install_post_slider_carousel() {
 
 	global $wpdb;
+
+	update_option( 'psc_db_version', PSC_DB_VERSION );
+
+	if ( ! get_option( 'psc_install_time' ) ) {
+
+		update_option( 'psc_install_time', time() );
+	}
 
 	$psc_slider_settings = array(
 		'linkimage' => '1',
@@ -309,6 +360,17 @@ function psc_install_post_slider_carousel() {
 		'post_exclude' => '',
 		'max_post_retrive' => '-1',
 		'readMore_text' => 'Read More',
+		'excerpt_length' => 20,
+		'show_excerpt' => 1,
+		'show_date' => 1,
+		'show_author' => 1,
+		'show_comments' => 1,
+		'show_readmore' => 1,
+		'grid_style' => 'default',
+		'show_filter' => 0,
+		'filter_all_text' => 'All',
+		'related_mode' => 0,
+		'related_count' => 4,
 		'show_pager' => 0,
 		'sort_by' => 'date',
 		'sort_direction' => 2,
@@ -353,7 +415,7 @@ function psc_install_post_slider_carousel() {
 
 function psc_admin_menu() {
 
-	$hook_suffix_c_r_l = add_menu_page( __( 'Post Slider & Grid', 'post-slider-carousel' ), __( 'Post Slider & Grid', 'post-slider-carousel' ), 'psc_post_slider_settings', 'psc_post_slider_carousel', 'psc_post_slider_carousel_options_func' );
+	$hook_suffix_c_r_l = add_menu_page( __( 'Post Slider & Grid', 'post-slider-carousel' ), __( 'Post Slider & Grid', 'post-slider-carousel' ), 'psc_post_slider_settings', 'psc_post_slider_carousel', 'psc_post_slider_carousel_options_func', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHJlY3QgeD0iNC41IiB5PSIzIiB3aWR0aD0iMTEiIGhlaWdodD0iMTAiIHJ4PSIxLjUiIGZpbGw9IiNhN2FhYWQiLz48cmVjdCB4PSIxIiB5PSI0LjUiIHdpZHRoPSIyLjIiIGhlaWdodD0iNyIgcng9IjEiIGZpbGw9IiNhN2FhYWQiLz48cmVjdCB4PSIxNi44IiB5PSI0LjUiIHdpZHRoPSIyLjIiIGhlaWdodD0iNyIgcng9IjEiIGZpbGw9IiNhN2FhYWQiLz48Y2lyY2xlIGN4PSI3IiBjeT0iMTYiIHI9IjEuMiIgZmlsbD0iI2E3YWFhZCIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTYiIHI9IjEuMiIgZmlsbD0iI2E3YWFhZCIvPjxjaXJjbGUgY3g9IjEzIiBjeT0iMTYiIHI9IjEuMiIgZmlsbD0iI2E3YWFhZCIvPjwvc3ZnPg==' );
 	$hook_suffix_r_l_2 = add_submenu_page( 'psc_post_slider_carousel', __( 'Preview Slider', 'post-slider-carousel' ), __( 'Preview Slider', 'post-slider-carousel' ), 'psc_preview_post_slider', 'psc_post_slider_carousel_preview', 'psc_post_slider_carousel_preview_func' );
 	$hook_suffix_r_l_3 = add_submenu_page( 'psc_post_slider_carousel', __( 'Post Grid Settings', 'post-slider-carousel' ), __( 'Post Grid Settings', 'post-slider-carousel' ), 'psc_post_grid_settings', 'psc_post_slider_grid', 'psc_post_grid_options_func' );
 	$hook_suffix_r_l_4 = add_submenu_page( 'psc_post_slider_carousel', __( 'Preview Post Grid', 'post-slider-carousel' ), __( 'Preview Post Grid', 'post-slider-carousel' ), 'psc_preview_post_grid', 'psc_post_slider_grid_preview', 'psc_post_grid_preview_func' );
@@ -379,6 +441,410 @@ function psc_admin_init() {
 	psc_post_slider_carousel_admin_scripts_init();
 }
 
+
+
+/**
+ * True when the Pro add-on is active.
+ *
+ * Pro is installed alongside this plugin rather than replacing it, so without a
+ * check both would register a block and the inserter would show two entries that
+ * do the same job. Pro's block is a superset, so this one stands down.
+ */
+function psc_pro_addon_is_active() {
+
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+
+		include_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+
+	if ( function_exists( 'is_plugin_active' ) && is_plugin_active( 'post-slider-carousel-pro/post-slider-carousel.php' ) ) {
+
+		return true;
+	}
+
+	// Fall back to functions that only ever exist in Pro, in case the folder has been
+	// renamed. Do not test PSC_DB_VERSION here: this plugin defines that constant too,
+	// so it would always report true and hide our own block from every free user.
+	// This runs on init, by which point every active plugin has been loaded.
+	return function_exists( 'psc_install_stats_tables' ) || function_exists( 'psc_pro_run_related_query' );
+}
+
+/**
+ * Hides this plugin's block from the inserter when the Pro add-on is active.
+ *
+ * The block stays registered, so any block already placed on a page keeps
+ * rendering. It is only removed from the list of blocks offered to the user,
+ * because Pro's block does the same job and more, and two near identical entries
+ * in the inserter is just confusing.
+ */
+function psc_register_post_slider_grid_block() {
+
+	if ( ! function_exists( 'register_block_type' ) ) {
+
+		return;
+	}
+
+
+	wp_register_script(
+		'psc-post-slider-grid-block',
+		plugins_url( 'blocks/psc-block.js', __FILE__ ),
+		array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n' ),
+		'1.0.23',
+		true
+	);
+
+	$psc_slider_opts = get_option( 'psc_slider_settings' );
+	$psc_grid_opts   = get_option( 'psc_pgrid_settings' );
+
+	if ( ! is_array( $psc_slider_opts ) ) {
+		$psc_slider_opts = array();
+	}
+	if ( ! is_array( $psc_grid_opts ) ) {
+		$psc_grid_opts = array();
+	}
+
+	$psc_slider_size = __( 'Auto', 'post-slider-carousel' );
+	if ( ! empty( $psc_slider_opts['imagewidth'] ) && ! empty( $psc_slider_opts['imageheight'] ) ) {
+
+		$psc_slider_size = $psc_slider_opts['imagewidth'] . 'x' . $psc_slider_opts['imageheight'];
+	}
+
+	wp_localize_script(
+		'psc-post-slider-grid-block',
+		'pscBlockData',
+		array(
+			'proActive' => psc_pro_addon_is_active(),
+			'slider' => array(
+				'posts'   => ( isset( $psc_slider_opts['max_post_retrive'] ) && '-1' != $psc_slider_opts['max_post_retrive'] ) ? $psc_slider_opts['max_post_retrive'] : __( 'All', 'post-slider-carousel' ),
+				'sort'    => isset( $psc_slider_opts['sort_by'] ) ? $psc_slider_opts['sort_by'] : 'date',
+				'visible' => isset( $psc_slider_opts['max_post'] ) ? $psc_slider_opts['max_post'] : '3',
+				'size'    => $psc_slider_size,
+				'caption' => ! empty( $psc_slider_opts['show_caption'] ),
+				'auto'    => ! empty( $psc_slider_opts['auto'] ),
+				'loop'    => ! empty( $psc_slider_opts['circular'] ),
+			),
+			'grid' => array(
+				'cols'  => isset( $psc_grid_opts['cols'] ) ? $psc_grid_opts['cols'] : '4',
+				'posts' => ( isset( $psc_grid_opts['max_post_retrive'] ) && '-1' != $psc_grid_opts['max_post_retrive'] ) ? $psc_grid_opts['max_post_retrive'] : __( 'All', 'post-slider-carousel' ),
+				'sort'  => isset( $psc_grid_opts['sort_by'] ) ? $psc_grid_opts['sort_by'] : 'date',
+				'pager' => ! empty( $psc_grid_opts['show_pager'] ),
+			),
+			'filterDefault'     => ! empty( $psc_grid_opts['show_filter'] ),
+			'relatedDefault'    => ! empty( $psc_grid_opts['related_mode'] ),
+			'relatedCount'      => isset( $psc_grid_opts['related_count'] ) ? intval( $psc_grid_opts['related_count'] ) : 4,
+			'sliderSettingsUrl' => admin_url( 'admin.php?page=psc_post_slider_carousel' ),
+			'gridSettingsUrl'   => admin_url( 'admin.php?page=psc_post_slider_grid' ),
+			'proUrl'            => 'https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/?utm_source=plugin&utm_medium=block&utm_campaign=free_to_pro',
+		)
+	);
+
+	// Keep the block registered even when Pro is active, so blocks already placed on
+	// a page carry on rendering. Just take it out of the inserter: Pro's block does
+	// the same job and more, and two near identical entries only confuse people.
+	$psc_supports = array();
+	if ( psc_pro_addon_is_active() ) {
+
+		$psc_supports['inserter'] = false;
+	}
+
+	register_block_type(
+		'i13/post-slider-grid-free',
+		array(
+			'editor_script'   => 'psc-post-slider-grid-block',
+			'render_callback' => 'psc_render_post_slider_grid_block',
+			'supports'        => $psc_supports,
+			'attributes'      => array(
+				'displayType' => array(
+					'type'    => 'string',
+					'default' => 'slider',
+				),
+				'related' => array(
+					'type'    => 'boolean',
+					'default' => false,
+				),
+			),
+		)
+	);
+}
+
+function psc_render_post_slider_grid_block( $attributes ) {
+
+	$psc_display_type = isset( $attributes['displayType'] ) ? $attributes['displayType'] : 'slider';
+	$psc_is_related   = ! empty( $attributes['related'] );
+
+	// Related mode needs a single post to work from. Inside the block editor the
+	// render request has no post context, so return a short note instead of an
+	// empty block.
+	if ( $psc_is_related && ! is_singular() ) {
+
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+
+			return '<p>' . esc_html__( 'Related posts will appear here when this is viewed on a single post.', 'post-slider-carousel' ) . '</p>';
+		}
+
+		return '';
+	}
+
+	$psc_related = $psc_is_related ? ' related="1"' : '';
+
+	if ( 'grid' === $psc_display_type ) {
+
+		return do_shortcode( '[psc_print_post_grid' . $psc_related . ']' );
+	}
+
+	return do_shortcode( '[psc_print_post_slider_carousel' . $psc_related . ']' );
+}
+
+function psc_pro_locked_tag() {
+
+	return '<span style="display:inline-block;background:#8524de;color:#fff;font-size:10px;font-weight:600;letter-spacing:1px;padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:6px;">PRO</span>';
+}
+
+function psc_pro_url( $medium ) {
+
+	return 'https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/?utm_source=plugin&utm_medium=' . rawurlencode( $medium ) . '&utm_campaign=free_to_pro';
+}
+
+function psc_render_add_new_locked_button( $label ) {
+	?>
+	<span style="margin-left:12px;vertical-align:middle;">
+		<button type="button" class="button" disabled="disabled" style="cursor:not-allowed;"><?php echo esc_html( $label ); ?></button>
+		<?php echo wp_kses_post( psc_pro_locked_tag() ); ?>
+		<span style="color:#646970;font-size:12px;margin-left:6px;">
+			<?php echo esc_html( __( 'Free version includes 1 slider & 1 grid.', 'post-slider-carousel' ) ); ?>
+			<a href="<?php echo esc_url( psc_pro_url( 'locked_add_new' ) ); ?>" target="_blank" style="color:#8524de;"><?php echo esc_html( __( 'Go Pro for unlimited', 'post-slider-carousel' ) ); ?> &rarr;</a>
+		</span>
+	</span>
+	<?php
+}
+
+function psc_render_locked_feature_row( $title, $choices_html, $medium ) {
+	?>
+	<div class="stuffbox" id="namediv" style="width:100%;">
+		<h3><label><?php echo esc_html( $title ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label></h3>
+		<div class="inside">
+			<table>
+				<tr>
+					<td><?php echo wp_kses_post( $choices_html ); ?></td>
+				</tr>
+				<tr>
+					<td style="padding-top:4px;">
+						<span style="color:#646970;font-size:12px;">
+							<a href="<?php echo esc_url( psc_pro_url( $medium ) ); ?>" target="_blank" style="color:#8524de;"><?php echo esc_html( __( 'Unlock this feature with Pro', 'post-slider-carousel' ) ); ?> &rarr;</a>
+						</span>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<?php
+}
+
+function psc_plugin_action_links( $links ) {
+
+	$psc_custom_links = array(
+		'<a href="' . esc_url( admin_url( 'admin.php?page=psc_post_slider_carousel' ) ) . '">' . esc_html( __( 'Settings', 'post-slider-carousel' ) ) . '</a>',
+		'<a href="' . esc_url( psc_pro_url( 'plugins_page' ) ) . '" target="_blank" style="color:#8524de;font-weight:600;">' . esc_html( __( 'Upgrade to Pro', 'post-slider-carousel' ) ) . '</a>',
+	);
+
+	return array_merge( $psc_custom_links, $links );
+}
+
+function psc_review_request_notice() {
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+
+		return;
+	}
+
+	if ( get_option( 'psc_review_dismissed' ) ) {
+
+		return;
+	}
+
+	$psc_install_time = get_option( 'psc_install_time' );
+	if ( ! $psc_install_time ) {
+
+		// No install time recorded. Plugin updates never fire the activation hook, so if
+		// settings already exist this is a long-time user upgrading - backdate the timer
+		// so they see the review request right away. Fresh installs wait the full 10 days.
+		if ( is_array( get_option( 'psc_slider_settings' ) ) || is_array( get_option( 'psc_pgrid_settings' ) ) ) {
+
+			$psc_install_time = time() - ( 10 * DAY_IN_SECONDS );
+		} else {
+
+			$psc_install_time = time();
+		}
+
+		update_option( 'psc_install_time', $psc_install_time );
+	}
+
+	if ( ( time() - intval( $psc_install_time ) ) < ( 10 * DAY_IN_SECONDS ) ) {
+
+		return;
+	}
+
+	$psc_later_time = get_option( 'psc_review_later_time' );
+	if ( $psc_later_time && time() < intval( $psc_later_time ) ) {
+
+		return;
+	}
+
+	$psc_screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( $psc_screen && ! empty( $psc_screen->id ) ) {
+
+		$psc_allowed_screens = array( 'dashboard', 'plugins' );
+		$psc_is_plugin_screen = ( false !== strpos( $psc_screen->id, 'psc_post_slider' ) || false !== strpos( $psc_screen->id, 'psc_post_grid' ) );
+		if ( ! $psc_is_plugin_screen && ! in_array( $psc_screen->id, $psc_allowed_screens, true ) ) {
+
+			return;
+		}
+	}
+
+	$psc_done_url  = wp_nonce_url( add_query_arg( 'psc_review_action', 'done' ), 'psc_review_action_nonce' );
+	$psc_later_url = wp_nonce_url( add_query_arg( 'psc_review_action', 'later' ), 'psc_review_action_nonce' );
+	?>
+	<div class="notice notice-info" style="padding:12px 15px;">
+		<p style="margin:0 0 8px;">
+			<?php echo esc_html( __( 'You have been using Post Sliders & Post Grids for a while - thank you! Would you mind leaving a quick review on WordPress.org? It really helps other users discover the plugin.', 'post-slider-carousel' ) ); ?>
+		</p>
+		<p style="margin:0;">
+			<a class="button button-primary" target="_blank" href="https://wordpress.org/support/plugin/post-slider-carousel/reviews/?filter=5#new-post"><?php echo esc_html( __( 'Rate it', 'post-slider-carousel' ) ); ?> &#9733;&#9733;&#9733;&#9733;&#9733;</a>
+			&nbsp;<a class="button" href="<?php echo esc_url( $psc_later_url ); ?>"><?php echo esc_html( __( 'Maybe later', 'post-slider-carousel' ) ); ?></a>
+			&nbsp;<a class="button" href="<?php echo esc_url( $psc_done_url ); ?>"><?php echo esc_html( __( 'I already did', 'post-slider-carousel' ) ); ?></a>
+		</p>
+	</div>
+	<?php
+}
+
+function psc_handle_review_notice_actions() {
+
+	if ( ! isset( $_GET['psc_review_action'] ) ) {
+
+		return;
+	}
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+
+		return;
+	}
+
+	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'psc_review_action_nonce' ) ) {
+
+		return;
+	}
+
+	$psc_action = sanitize_text_field( wp_unslash( $_GET['psc_review_action'] ) );
+
+	if ( 'done' === $psc_action ) {
+
+		update_option( 'psc_review_dismissed', 1 );
+	} elseif ( 'later' === $psc_action ) {
+
+		update_option( 'psc_review_later_time', time() + ( 15 * DAY_IN_SECONDS ) );
+	}
+
+	wp_safe_redirect( remove_query_arg( array( 'psc_review_action', '_wpnonce' ) ) );
+	exit;
+}
+
+function psc_render_usage_box( $type = 'grid' ) {
+
+	$psc_is_grid   = ( 'grid' === $type );
+	$psc_shortcode = $psc_is_grid ? '[psc_print_post_grid]' : '[psc_print_post_slider_carousel]';
+	$psc_related   = $psc_is_grid ? '[psc_print_post_grid related="1"]' : '[psc_print_post_slider_carousel related="1"]';
+	$psc_block     = __( 'Post Slider & Grid', 'post-slider-carousel' );
+	?>
+	<div class="stuffbox" style="width:100%;max-width:300px;">
+		<h3><label><?php echo esc_html( __( 'How to display this on your site', 'post-slider-carousel' ) ); ?></label></h3>
+		<div class="inside">
+			<table style="width:100%;">
+				<tr>
+					<td>
+						<p style="margin:0 0 6px;font-weight:600;"><?php echo esc_html( __( '1. Block editor', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 14px;color:#646970;">
+							<?php
+							/* translators: %s: block name */
+							printf( esc_html( __( 'Add the "%s" block to any post or page, then choose Slider or Grid in the block sidebar.', 'post-slider-carousel' ) ), esc_html( $psc_block ) );
+							?>
+						</p>
+
+						<p style="margin:0 0 6px;font-weight:600;"><?php echo esc_html( __( '2. Shortcode', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 6px;color:#646970;"><?php echo esc_html( __( 'Paste this into any post, page, or text widget:', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 14px;">
+							<input type="text" readonly="readonly" value="<?php echo esc_attr( $psc_shortcode ); ?>" class="psc-copy-field" style="width:100%;max-width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;margin-bottom:4px;" onclick="this.focus();this.select();" />
+							<button type="button" class="button psc-copy-btn"><?php echo esc_html( __( 'Copy', 'post-slider-carousel' ) ); ?></button>
+						</p>
+
+						<p style="margin:0 0 6px;font-weight:600;"><?php echo esc_html( __( '3. Related posts', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 6px;color:#646970;"><?php echo esc_html( __( 'Shows posts from the same categories as the post being viewed. Add this to a single post template, or enable Related Posts in the settings above:', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 14px;">
+							<input type="text" readonly="readonly" value="<?php echo esc_attr( $psc_related ); ?>" class="psc-copy-field" style="width:100%;max-width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;margin-bottom:4px;" onclick="this.focus();this.select();" />
+							<button type="button" class="button psc-copy-btn"><?php echo esc_html( __( 'Copy', 'post-slider-carousel' ) ); ?></button>
+						</p>
+						<p style="margin:0 0 14px;color:#646970;font-size:12px;">
+							<?php echo esc_html( __( 'Optional: add related_count="6" to change how many posts are shown.', 'post-slider-carousel' ) ); ?>
+						</p>
+
+						<p style="margin:0 0 6px;font-weight:600;"><?php echo esc_html( __( '4. Theme template file', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0 0 6px;color:#646970;"><?php echo esc_html( __( 'Paste this into a PHP template file such as single.php:', 'post-slider-carousel' ) ); ?></p>
+						<p style="margin:0;">
+							<input type="text" readonly="readonly" value="<?php echo esc_attr( "<?php echo do_shortcode('" . $psc_shortcode . "'); ?>" ); ?>" class="psc-copy-field" style="width:100%;max-width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;margin-bottom:4px;" onclick="this.focus();this.select();" />
+							<button type="button" class="button psc-copy-btn"><?php echo esc_html( __( 'Copy', 'post-slider-carousel' ) ); ?></button>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<div style="clear:both"></div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	jQuery(document).ready(function($){
+		$('.psc-copy-btn').on('click', function(){
+			var btn = $(this);
+			var field = btn.prev('.psc-copy-field');
+			field[0].select();
+			field[0].setSelectionRange(0, 99999);
+			try {
+				document.execCommand('copy');
+				var original = btn.text();
+				btn.text(<?php echo wp_json_encode( __( 'Copied', 'post-slider-carousel' ) ); ?>);
+				setTimeout(function(){ btn.text(original); }, 1500);
+			} catch(e) {}
+		});
+	});
+	</script>
+	<?php
+}
+
+function psc_render_pro_upsell_box() {
+	?>
+	<div style="background:#fff;border:1px solid #e2e4e7;border-radius:10px;padding:20px;margin-bottom:15px;box-shadow:0 1px 2px rgba(0,0,0,0.04);max-width:300px;">
+		<span style="display:inline-block;background:#8524de;color:#fff;font-size:11px;font-weight:600;letter-spacing:1px;padding:3px 12px;border-radius:999px;">PRO</span>
+		<h3 style="margin:12px 0 10px;font-size:16px;line-height:1.4;color:#1e1e1e;"><?php echo esc_html( __( 'Get more from your post sliders & grids', 'post-slider-carousel' ) ); ?></h3>
+		<ul style="margin:0 0 16px;padding:0;list-style:none;">
+		<?php
+		$psc_pro_features = array(
+			__( 'Unlimited sliders & unlimited post grids - not just one of each', 'post-slider-carousel' ),
+			__( 'Vertical post slider & continuous ticker mode', 'post-slider-carousel' ),
+			__( 'Ajax pagination in post grids - load more posts without page reload', 'post-slider-carousel' ),
+			__( 'Masonry, Overlay & Magazine grid layouts', 'post-slider-carousel' ),
+			__( 'Social sharing buttons on post grids', 'post-slider-carousel' ),
+			__( '16 easing animation effects', 'post-slider-carousel' ),
+			__( 'Manage all sliders & grids from one screen', 'post-slider-carousel' ),
+		);
+		foreach ( $psc_pro_features as $psc_feature ) {
+			echo '<li style="position:relative;padding:0 0 10px 24px;font-size:13px;line-height:1.5;color:#3c434a;"><span style="position:absolute;left:0;color:#00a32a;font-weight:700;">&#10003;</span>' . esc_html( $psc_feature ) . '</li>';
+		}
+		?>
+		</ul>
+		<a href="https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/?utm_source=plugin&utm_medium=sidebar&utm_campaign=free_to_pro" target="_blank" style="display:block;text-align:center;background:#8524de;color:#fff;font-size:14px;font-weight:600;padding:10px 0;border-radius:8px;text-decoration:none;">
+			<?php echo esc_html( __( 'Upgrade to Pro', 'post-slider-carousel' ) ); ?> &rarr;
+		</a>
+		<p style="text-align:center;color:#8f98a1;font-size:12px;margin:10px 0 0;"><?php echo esc_html( __( 'One-time payment - no monthly fee', 'post-slider-carousel' ) ); ?></p>
+	</div>
+	<?php
+}
 
 function psc_post_slider_carousel_options_func() {
 
@@ -605,26 +1071,6 @@ function psc_post_slider_carousel_options_func() {
 					}
 		</style>
 		  <div class="wrap">
-			  <table><tr>
-					   <td>
-							<div class="fb-like" data-href="https://www.facebook.com/i13websolution" data-layout="button" data-action="like" data-size="large" data-show-faces="false" data-share="false"></div>
-							<div id="fb-root"></div>
-							  <script>(function(d, s, id) {
-								var js, fjs = d.getElementsByTagName(s)[0];
-								if (d.getElementById(id)) return;
-								js = d.createElement(s); js.id = id;
-								js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=158817690866061&autoLogAppEvents=1';
-								fjs.parentNode.insertBefore(js, fjs);
-							  }(document, 'script', 'facebook-jssdk'));</script>
-						</td>
-					  <td>
-						  <a target="_blank" title="Donate" href="http://www.i13websolution.com/donate-wordpress_image_thumbnail.php">
-							  <img id="help us for free plugin" height="30" width="90" src="<?php echo esc_url( plugins_url( 'images/paypaldonate.jpg', __FILE__ ) ); ?>" border="0" alt="help us for free plugin" title="help us for free plugin">
-						  </a>
-					  </td>
-				  </tr>
-			  </table>
-
 			  <?php
 				  $messages = get_option( 'psc_messages' );
 				  $type = '';
@@ -647,8 +1093,7 @@ function psc_post_slider_carousel_options_func() {
 					update_option( 'psc_messages', array() );
 					?>
 					
-			  <span><h3 style="color: blue;"><a target="_blank" href="https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/"><?php echo esc_html( __( 'UPGRADE TO PRO VERSION', 'post-slider-carousel' ) ); ?></a></h3></span>
-			  <h2><?php echo esc_html( __( 'Slider Settings', 'post-slider-carousel' ) ); ?></h2>
+			  <h2 style="display:inline-block;"><?php echo esc_html( __( 'Slider Settings', 'post-slider-carousel' ) ); ?></h2><?php psc_render_add_new_locked_button( __( '+ Add New Slider', 'post-slider-carousel' ) ); ?>
 			  <div id="poststuff">
 				  <div id="post-body" class="metabox-holder columns-2">
 					  <div id="post-body-content">
@@ -659,6 +1104,12 @@ function psc_post_slider_carousel_options_func() {
 											
 											
 										  
+											<?php
+											$psc_dir_choices = '<label style="margin-right:14px;"><input type="radio" checked="checked" disabled="disabled" style="width:20px;"> ' . esc_html( __( 'Horizontal', 'post-slider-carousel' ) ) . '</label>'
+												. '<label style="margin-right:14px;color:#8c8f94;"><input type="radio" disabled="disabled" style="width:20px;"> ' . esc_html( __( 'Vertical', 'post-slider-carousel' ) ) . '</label>'
+												. '<label style="color:#8c8f94;"><input type="radio" disabled="disabled" style="width:20px;"> ' . esc_html( __( 'Continuous Ticker', 'post-slider-carousel' ) ) . '</label>';
+											psc_render_locked_feature_row( __( 'Slider Direction', 'post-slider-carousel' ), $psc_dir_choices, 'locked_direction' );
+											?>
 											<div class="stuffbox" id="namediv" style="width:100%;">
 											<h3><label><?php echo esc_html( __( 'Show Caption ?', 'post-slider-carousel' ) ); ?></label></h3>
 											<div class="inside">
@@ -1429,29 +1880,9 @@ function psc_post_slider_carousel_options_func() {
 			  </div>  
 		  </div>      
 	  </div>
-	  <div id="postbox-container-1" class="postbox-container" > 
-
-		<div class="postbox"> 
-			  <h3 class="hndle"><span></span><?php echo esc_html( __( 'Access All Themes In One Price', 'post-slider-carousel' ) ); ?></h3> 
-			  <div class="inside">
-				  <center><a href="http://www.elegantthemes.com/affiliates/idevaffiliate.php?id=11715_0_1_10" target="_blank"><img border="0" src="<?php echo esc_url( plugins_url( 'images/300x250.gif', __FILE__ ) ); ?>" width="250" height="250"></a></center>
-
-				  <div style="margin:10px 5px">
-
-				  </div>
-			  </div></div>
-		   <div class="postbox"> 
-			<h3 class="hndle"><span></span><?php echo esc_html( __( 'Google For Business Coupon', 'post-slider-carousel' ) ); ?></h3> 
-				<div class="inside">
-					<center><a href="https://goo.gl/OJBuHT" target="_blank">
-							<img src="<?php echo esc_url( plugins_url( 'images/g-suite-promo-code-4.png', __FILE__ ) ); ?>" width="250" height="250" border="0">
-						</a></center>
-					<div style="margin:10px 5px">
-					</div>
-				</div>
-
-			</div>
-
+	  <div id="postbox-container-1" class="postbox-container" >
+		<?php psc_render_usage_box( 'slider' ); ?>
+		<?php psc_render_pro_upsell_box(); ?>
 	  </div>      
 	 <div class="clear"></div>
   </div>  
@@ -1483,6 +1914,35 @@ function psc_post_grid_options_func() {
 			$read_more_cl = isset( $_POST['read_more_cl'] ) ? sanitize_hex_color( $_POST['read_more_cl'] ) : '#aaaaaa';
 			$read_more_hcl = isset( $_POST['read_more_hcl'] ) ? sanitize_hex_color( $_POST['read_more_hcl'] ) : '#777777';
 			$readMore_text = isset( $_POST['readMore_text'] ) ? sanitize_text_field( $_POST['readMore_text'] ) : 'Read More';
+			$excerpt_length = isset( $_POST['excerpt_length'] ) ? intval( sanitize_text_field( $_POST['excerpt_length'] ) ) : 20;
+			if ( $excerpt_length < 1 ) {
+				$excerpt_length = 1;
+			}
+			if ( $excerpt_length > 200 ) {
+				$excerpt_length = 200;
+			}
+			$show_excerpt = isset( $_POST['show_excerpt'] ) ? 1 : 0;
+			$show_date = isset( $_POST['show_date'] ) ? 1 : 0;
+			$show_author = isset( $_POST['show_author'] ) ? 1 : 0;
+			$show_comments = isset( $_POST['show_comments'] ) ? 1 : 0;
+			$show_readmore = isset( $_POST['show_readmore'] ) ? 1 : 0;
+			$show_filter = isset( $_POST['show_filter'] ) ? 1 : 0;
+			$filter_all_text = isset( $_POST['filter_all_text'] ) ? sanitize_text_field( $_POST['filter_all_text'] ) : 'All';
+			if ( '' === trim( $filter_all_text ) ) {
+				$filter_all_text = 'All';
+			}
+			$related_mode = isset( $_POST['related_mode'] ) ? 1 : 0;
+			$related_count = isset( $_POST['related_count'] ) ? intval( sanitize_text_field( $_POST['related_count'] ) ) : 4;
+			if ( $related_count < 1 ) {
+				$related_count = 1;
+			}
+			if ( $related_count > 50 ) {
+				$related_count = 50;
+			}
+			$grid_style = isset( $_POST['grid_style'] ) ? sanitize_text_field( $_POST['grid_style'] ) : 'default';
+			if ( ! in_array( $grid_style, array( 'default', 'list' ), true ) ) {
+				$grid_style = 'default';
+			}
 			$show_pager = isset( $_POST['show_pager'] ) ? intval( sanitize_text_field( $_POST['show_pager'] ) ) : 1;
 					$max_post_retrive = isset( $_POST['max_post_retrive'] ) ? intval( sanitize_text_field( $_POST['max_post_retrive'] ) ) : -1;
 			$postype_include_exclude = isset( $_POST['postype_include_exclude'] ) ? intval( $_POST['postype_include_exclude'] ) : 0;
@@ -1531,6 +1991,17 @@ function psc_post_grid_options_func() {
 		 $options['read_more_cl'] = $read_more_cl;
 		 $options['read_more_hcl'] = $read_more_hcl;
 		 $options['readMore_text'] = $readMore_text;
+		 $options['excerpt_length'] = $excerpt_length;
+		 $options['show_excerpt'] = $show_excerpt;
+		 $options['show_date'] = $show_date;
+		 $options['show_author'] = $show_author;
+		 $options['show_comments'] = $show_comments;
+		 $options['show_readmore'] = $show_readmore;
+		 $options['grid_style'] = $grid_style;
+		 $options['show_filter'] = $show_filter;
+		 $options['filter_all_text'] = $filter_all_text;
+		 $options['related_mode'] = $related_mode;
+		 $options['related_count'] = $related_count;
 		 $options['max_post_retrive'] = $max_post_retrive;
 		 $options['postype'] = $postype;
 		 $options['post_category'] = $post_category;
@@ -1563,6 +2034,17 @@ function psc_post_grid_options_func() {
 		 'post_category' => '',
 		 'max_post_retrive' => '-1',
 		 'readMore_text' => 'Read More',
+		 'excerpt_length' => 20,
+		 'show_excerpt' => 1,
+		 'show_date' => 1,
+		 'show_author' => 1,
+		 'show_comments' => 1,
+		 'show_readmore' => 1,
+		 'grid_style' => 'default',
+		 'show_filter' => 0,
+		 'filter_all_text' => 'All',
+		 'related_mode' => 0,
+		 'related_count' => 4,
 		 'post_exclude' => '',
 		 'show_pager' => 0,
 		 'sort_by' => 'date',
@@ -1656,26 +2138,6 @@ function psc_post_grid_options_func() {
 					}
 		</style>
 		  <div class="wrap">
-			  <table><tr>
-					   <td>
-							<div class="fb-like" data-href="https://www.facebook.com/i13websolution" data-layout="button" data-action="like" data-size="large" data-show-faces="false" data-share="false"></div>
-							<div id="fb-root"></div>
-							  <script>(function(d, s, id) {
-								var js, fjs = d.getElementsByTagName(s)[0];
-								if (d.getElementById(id)) return;
-								js = d.createElement(s); js.id = id;
-								js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=158817690866061&autoLogAppEvents=1';
-								fjs.parentNode.insertBefore(js, fjs);
-							  }(document, 'script', 'facebook-jssdk'));</script>
-						</td>
-					  <td>
-						  <a target="_blank" title="Donate" href="http://www.i13websolution.com/donate-wordpress_image_thumbnail.php">
-							  <img id="help us for free plugin" height="30" width="90" src="<?php echo esc_url( plugins_url( 'images/paypaldonate.jpg', __FILE__ ) ); ?>" border="0" alt="help us for free plugin" title="help us for free plugin">
-						  </a>
-					  </td>
-				  </tr>
-			  </table>
-
 			  <?php
 				  $messages = get_option( 'psc_messages' );
 				  $type = '';
@@ -1698,8 +2160,7 @@ function psc_post_grid_options_func() {
 					update_option( 'psc_messages', array() );
 					?>
 					
-			  <span><h3 style="color: blue;"><a target="_blank" href="https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/"><?php echo esc_html( __( 'UPGRADE TO PRO VERSION', 'post-slider-carousel' ) ); ?></a></h3></span>
-			  <h2><?php echo esc_html( __( 'Post Grid Settings', 'post-slider-carousel' ) ); ?></h2>
+			  <h2 style="display:inline-block;"><?php echo esc_html( __( 'Post Grid Settings', 'post-slider-carousel' ) ); ?></h2><?php psc_render_add_new_locked_button( __( '+ Add New Grid', 'post-slider-carousel' ) ); ?>
 			  <div id="poststuff">
 				  <div id="post-body" class="metabox-holder columns-2">
 					  <div id="post-body-content">
@@ -1709,7 +2170,134 @@ function psc_post_grid_options_func() {
 										<fieldset class="fieldsetAdmin">
 											<legend><?php echo esc_html( __( 'Post Settings', 'post-slider-carousel' ) ); ?></legend>
 											
+											<div class="stuffbox" id="psc_grid_style_box" style="width:100%;">
+												<h3><label><?php echo esc_html( __( 'Grid Style', 'post-slider-carousel' ) ); ?><span style="display:inline-block;background:#8524de;color:#fff;font-size:10px;font-weight:600;letter-spacing:1px;padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:6px;">3 MORE IN PRO</span></label></h3>
+												<div class="inside">
+													<table>
+														<tr>
+															<td>
+																<?php $psc_grid_style_val = isset( $settings['grid_style'] ) ? $settings['grid_style'] : 'default'; ?>
+																<select name="grid_style" style="width:280px;">
+																	<option value="default" <?php selected( 'default', $psc_grid_style_val ); ?>><?php echo esc_html( __( 'Default - equal height grid', 'post-slider-carousel' ) ); ?></option>
+																	<option value="list" <?php selected( 'list', $psc_grid_style_val ); ?>><?php echo esc_html( __( 'List - image left, content right', 'post-slider-carousel' ) ); ?></option>
+																	<option value="masonry" disabled="disabled"><?php echo esc_html( __( 'Masonry - Pinterest style (Pro)', 'post-slider-carousel' ) ); ?></option>
+																	<option value="overlay" disabled="disabled"><?php echo esc_html( __( 'Overlay - title on image (Pro)', 'post-slider-carousel' ) ); ?></option>
+																	<option value="magazine" disabled="disabled"><?php echo esc_html( __( 'Magazine - first post featured (Pro)', 'post-slider-carousel' ) ); ?></option>
+																</select>
+																<div id="psc_grid_style_hint" style="margin-top:6px;color:#646970;font-size:12px;"></div>
+																<div style="margin-top:6px;color:#646970;font-size:12px;"><a href="<?php echo esc_url( psc_pro_url( 'locked_grid_style' ) ); ?>" target="_blank" style="color:#8524de;"><?php echo esc_html( __( 'Unlock Masonry, Overlay and Magazine layouts with Pro', 'post-slider-carousel' ) ); ?> &rarr;</a></div>
+															</td>
+														</tr>
+													</table>
+													<div style="clear:both"></div>
+												</div>
+											</div>
+											<script type="text/javascript">
+											jQuery(document).ready(function($){
+												var pscHints = {
+													'default': <?php echo wp_json_encode( __( 'Every post gets an equal height card.', 'post-slider-carousel' ) ); ?>,
+													'list': <?php echo wp_json_encode( __( 'Image on the left, title and excerpt on the right. One post per row, so column counts do not apply.', 'post-slider-carousel' ) ); ?>
+												};
+
+												function pscUpdateGridStyle(){
+													var style = $('select[name="grid_style"]').val();
+													$('#psc_grid_style_hint').text( pscHints[style] || '' );
+
+													// The list layout is always one full width row per post,
+													// so the column counts do not apply to it.
+													if( style === 'list' ){
+														$('#psc_columns_group').hide();
+													} else {
+														$('#psc_columns_group').show();
+													}
+												}
+
+												$('select[name="grid_style"]').on('change', pscUpdateGridStyle);
+												pscUpdateGridStyle();
+											});
+											</script>
 											<div class="stuffbox" id="namediv" style="width:100%;">
+												<h3><label><?php echo esc_html( __( 'Category Filter Tabs', 'post-slider-carousel' ) ); ?></label></h3>
+												<div class="inside">
+													<table>
+														<tr>
+															<td>
+																<label style="display:block;margin-bottom:8px;"><input style="width:20px;" type="checkbox" name="show_filter" id="show_filter" value="1" <?php checked( 1, isset( $settings['show_filter'] ) ? intval( $settings['show_filter'] ) : 0 ); ?>> <?php echo esc_html( __( 'Show category filter buttons above the grid', 'post-slider-carousel' ) ); ?></label>
+																<div id="psc_filter_opts" style="margin:0 0 10px 24px;">
+																	<label style="display:block;margin-bottom:10px;"><?php echo esc_html( __( '"All" button text:', 'post-slider-carousel' ) ); ?> <input type="text" name="filter_all_text" value="<?php echo esc_attr( isset( $settings['filter_all_text'] ) ? $settings['filter_all_text'] : 'All' ); ?>" style="width:140px;"></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Filter by tags or a custom taxonomy', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Select more than one category at a time', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Start on a chosen category instead of "All"', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Dropdown and accordion filter styles', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Show the post count next to each category', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<div style="margin-top:6px;font-size:12px;"><a href="<?php echo esc_url( psc_pro_url( 'locked_filter_tabs' ) ); ?>" target="_blank" style="color:#8524de;"><?php echo esc_html( __( 'Unlock tag filtering, multi select and filter styles with Pro', 'post-slider-carousel' ) ); ?> &rarr;</a></div>
+																</div>
+																<div id="psc_filter_related_note" style="display:none;padding:8px 12px;border-left:4px solid #dba617;background:#fcf9e8;font-size:12px;color:#3c434a;max-width:520px;margin-bottom:10px;">
+																	<?php echo esc_html( __( 'Filter tabs are hidden while Related Posts mode is on, because the grid already shows posts chosen by the current post.', 'post-slider-carousel' ) ); ?>
+																</div>
+																<div style="color:#646970;font-size:12px;">
+																	<?php echo esc_html( __( 'Buttons are built from the categories your grid is already allowed to show, so a tab can never come up empty. Filtering happens without reloading the page.', 'post-slider-carousel' ) ); ?>
+																</div>
+															</td>
+														</tr>
+													</table>
+													<div style="clear:both"></div>
+												</div>
+											</div>
+											<script type="text/javascript">
+											jQuery(document).ready(function($){
+												function pscToggleFilter(){
+													var on = $('#show_filter').is(':checked');
+													var relatedOn = $('#related_mode').is(':checked');
+													$('#psc_filter_opts').toggle( on && ! relatedOn );
+													$('#psc_filter_related_note').toggle( on && relatedOn );
+												}
+												$('#show_filter, #related_mode').on('change', pscToggleFilter);
+												pscToggleFilter();
+											});
+											</script>
+											<div class="stuffbox" id="namediv" style="width:100%;">
+												<h3><label><?php echo esc_html( __( 'Related Posts', 'post-slider-carousel' ) ); ?></label></h3>
+												<div class="inside">
+													<table>
+														<tr>
+															<td>
+																<label style="display:block;margin-bottom:8px;"><input style="width:20px;" type="checkbox" name="related_mode" id="related_mode" value="1" <?php checked( 1, isset( $settings['related_mode'] ) ? intval( $settings['related_mode'] ) : 0 ); ?>> <?php echo esc_html( __( 'Show posts related to the post being viewed', 'post-slider-carousel' ) ); ?></label>
+																<div id="psc_related_opts" style="margin:0 0 10px 24px;">
+																	<label style="display:block;margin-bottom:8px;"><?php echo esc_html( __( 'Number of related posts:', 'post-slider-carousel' ) ); ?> <input type="number" name="related_count" min="1" max="50" value="<?php echo esc_attr( isset( $settings['related_count'] ) ? intval( $settings['related_count'] ) : 4 ); ?>" style="width:80px;"></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="radio" checked="checked" disabled="disabled"> <?php echo esc_html( __( 'Match by category', 'post-slider-carousel' ) ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="radio" disabled="disabled"> <?php echo esc_html( __( 'Match by tags', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="radio" disabled="disabled"> <?php echo esc_html( __( 'Match by any custom taxonomy', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Sort by relevance (most shared terms first)', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<label style="display:block;margin-bottom:6px;color:#8c8f94;"><input style="width:20px;" type="checkbox" disabled="disabled"> <?php echo esc_html( __( 'Insert automatically below every post', 'post-slider-carousel' ) ); ?><?php echo wp_kses_post( psc_pro_locked_tag() ); ?></label>
+																	<div style="margin-top:6px;font-size:12px;"><a href="<?php echo esc_url( psc_pro_url( 'locked_related_posts' ) ); ?>" target="_blank" style="color:#8524de;"><?php echo esc_html( __( 'Unlock tag matching, relevance sorting and auto insert with Pro', 'post-slider-carousel' ) ); ?> &rarr;</a></div>
+																</div>
+																<div style="color:#646970;font-size:12px;">
+																	<?php echo esc_html( __( 'When enabled, the grid shows posts from the same categories as the post being viewed, and hides itself on pages that are not a single post. Your category and post type filters above are ignored in this mode.', 'post-slider-carousel' ) ); ?>
+																	<br>
+																	<?php echo esc_html( __( 'You can also use the shortcode:', 'post-slider-carousel' ) ); ?> <code>[psc_print_post_grid related="1"]</code>
+																</div>
+															</td>
+														</tr>
+													</table>
+													<div style="clear:both"></div>
+												</div>
+											</div>
+											<script type="text/javascript">
+											jQuery(document).ready(function($){
+												function pscToggleRelated(){
+													if( $('#related_mode').is(':checked') ){
+														$('#psc_related_opts').show();
+													} else {
+														$('#psc_related_opts').hide();
+													}
+												}
+												$('#related_mode').on('change', pscToggleRelated);
+												pscToggleRelated();
+											});
+											</script>
+											<div id="psc_columns_group">
+<div class="stuffbox" id="namediv" style="width:100%;">
 											<h3><label><?php echo esc_html( __( 'Post Grid Columns', 'post-slider-carousel' ) ); ?></label></h3>
 												<div class="inside">
 													<table>
@@ -1877,6 +2465,7 @@ function psc_post_grid_options_func() {
 													<div style="clear:both"></div>
 												</div>
 											</div>
+																						</div>
 											<div class="stuffbox" id="namediv" style="width:100%;">
 												<h3><label><?php echo esc_html( __( 'Heading Color', 'post-slider-carousel' ) ); ?></label></h3>
 												<div class="inside">
@@ -1973,6 +2562,24 @@ function psc_post_grid_options_func() {
 
 												</div>
 											</div> 
+											<div class="stuffbox" id="namediv" style="width:100%;">
+												<h3><label><?php echo esc_html( __( 'Content & Meta', 'post-slider-carousel' ) ); ?> </label></h3>
+												<div class="inside">
+													<table>
+														<tr>
+															<td>
+																<label style="display:block;margin-bottom:6px;"><input style="width:20px;" type="checkbox" name="show_excerpt" value="1" <?php checked( 1, isset( $settings['show_excerpt'] ) ? intval( $settings['show_excerpt'] ) : 1 ); ?>> <?php echo esc_html( __( 'Show excerpt (post content)', 'post-slider-carousel' ) ); ?></label>
+																<label style="display:block;margin-bottom:10px;"><?php echo esc_html( __( 'Excerpt length (words):', 'post-slider-carousel' ) ); ?> <input type="number" name="excerpt_length" min="1" max="200" value="<?php echo esc_attr( isset( $settings['excerpt_length'] ) ? intval( $settings['excerpt_length'] ) : 20 ); ?>" style="width:80px;"></label>
+																<label style="display:block;margin-bottom:6px;"><input style="width:20px;" type="checkbox" name="show_date" value="1" <?php checked( 1, isset( $settings['show_date'] ) ? intval( $settings['show_date'] ) : 1 ); ?>> <?php echo esc_html( __( 'Show post date', 'post-slider-carousel' ) ); ?></label>
+																<label style="display:block;margin-bottom:6px;"><input style="width:20px;" type="checkbox" name="show_author" value="1" <?php checked( 1, isset( $settings['show_author'] ) ? intval( $settings['show_author'] ) : 1 ); ?>> <?php echo esc_html( __( 'Show author', 'post-slider-carousel' ) ); ?></label>
+																<label style="display:block;margin-bottom:6px;"><input style="width:20px;" type="checkbox" name="show_comments" value="1" <?php checked( 1, isset( $settings['show_comments'] ) ? intval( $settings['show_comments'] ) : 1 ); ?>> <?php echo esc_html( __( 'Show comment count', 'post-slider-carousel' ) ); ?></label>
+																<label style="display:block;"><input style="width:20px;" type="checkbox" name="show_readmore" value="1" <?php checked( 1, isset( $settings['show_readmore'] ) ? intval( $settings['show_readmore'] ) : 1 ); ?>> <?php echo esc_html( __( 'Show "Read More" link', 'post-slider-carousel' ) ); ?></label>
+															</td>
+														</tr>
+													</table>
+													<div style="clear:both"></div>
+												</div>
+											</div>
 											<div class="stuffbox" id="namediv" style="width:100%;">
 												<h3><label><?php echo esc_html( __( 'Maximum Post To be Retrieve From', 'post-slider-carousel' ) ); ?> </label></h3>
 												<div class="inside">
@@ -2271,6 +2878,12 @@ function psc_post_grid_options_func() {
 													<div style="clear:both"></div>
 												</div>
 											</div>
+											<?php
+											$psc_ajax_choices = '<label style="margin-right:14px;color:#8c8f94;"><input type="checkbox" disabled="disabled" style="width:20px;"> ' . esc_html( __( 'Enable Ajax pagination (load more posts without page reload)', 'post-slider-carousel' ) ) . '</label>';
+											psc_render_locked_feature_row( __( 'Ajax Pagination', 'post-slider-carousel' ), $psc_ajax_choices, 'locked_ajax_pagination' );
+											$psc_share_choices = '<label style="margin-right:14px;color:#8c8f94;"><input type="checkbox" disabled="disabled" style="width:20px;"> ' . esc_html( __( 'Show social sharing buttons on each post', 'post-slider-carousel' ) ) . '</label>';
+											psc_render_locked_feature_row( __( 'Social Sharing', 'post-slider-carousel' ), $psc_share_choices, 'locked_social_sharing' );
+											?>
 											<div class="stuffbox" id="Show_Pager_div" style="width:100%;">
 											<h3><label><?php echo esc_html( __( 'Show Pager ?', 'post-slider-carousel' ) ); ?></label></h3>
 											<div class="inside">
@@ -2430,29 +3043,9 @@ function psc_post_grid_options_func() {
 			  </div>  
 		  </div>      
 	  </div>
-	  <div id="postbox-container-1" class="postbox-container" > 
-
-		<div class="postbox"> 
-			  <h3 class="hndle"><span></span><?php echo esc_html( __( 'Access All Themes In One Price', 'post-slider-carousel' ) ); ?></h3> 
-			  <div class="inside">
-				  <center><a href="http://www.elegantthemes.com/affiliates/idevaffiliate.php?id=11715_0_1_10" target="_blank"><img border="0" src="<?php echo esc_url( plugins_url( 'images/300x250.gif', __FILE__ ) ); ?>" width="250" height="250"></a></center>
-
-				  <div style="margin:10px 5px">
-
-				  </div>
-			  </div></div>
-			<div class="postbox"> 
-				<h3 class="hndle"><span></span><?php echo esc_html( __( 'Google For Business Coupon', 'post-slider-carousel' ) ); ?></h3> 
-					<div class="inside">
-						<center><a href="https://goo.gl/OJBuHT" target="_blank">
-								<img src="<?php echo esc_url( plugins_url( 'images/g-suite-promo-code-4.png', __FILE__ ) ); ?>" width="250" height="250" border="0">
-							</a></center>
-						<div style="margin:10px 5px">
-						</div>
-					</div>
-
-				</div>
-
+	  <div id="postbox-container-1" class="postbox-container" >
+		<?php psc_render_usage_box( 'grid' ); ?>
+		<?php psc_render_pro_upsell_box(); ?>
 	  </div>      
 	 <div class="clear"></div>
   </div>  
@@ -2673,6 +3266,16 @@ function psc_get_no_img_url( $imageheight, $imagewidth, $grid = false ) {
 
 function psc_print_post_slider_carousel_func( $atts ) {
 
+	$psc_atts = shortcode_atts(
+		array(
+			'related'       => '',
+			'related_count' => 0,
+		),
+		$atts
+	);
+	$psc_atts_related = ( '1' === (string) $psc_atts['related'] || 'true' === strtolower( (string) $psc_atts['related'] ) );
+	$psc_atts_count   = intval( $psc_atts['related_count'] );
+
 	global $wpdb;
 	$rand_Numb = uniqid( 'psc_thumnail_slider' );
 	$rand_Num_td = uniqid( 'psc_divSliderMain' );
@@ -2745,8 +3348,18 @@ function psc_print_post_slider_carousel_func( $atts ) {
 
 							  $wp_query_args = array();
 							  $wp_query_args['post_type'] = $postTypesTouse;
-							  $wp_query_args['post_status'] = array( 'publish', 'private' );
-							  $wp_query_args['posts_per_page'] = $settings['max_post_retrive'];
+							  $wp_query_args['post_status'] = 'publish';
+							if ( is_user_logged_in() && current_user_can( 'read_private_posts' ) ) {
+								$wp_query_args['post_status'] = array( 'publish', 'private' );
+							}
+							  $psc_ppp = intval( $settings['max_post_retrive'] );
+						if ( $psc_ppp < 1 ) {
+
+							// -1 means "all posts". Fetching every post at once exhausts memory on
+							// large sites, since each one also gets a resized thumbnail generated.
+							$psc_ppp = apply_filters( 'psc_max_posts_per_page', 200 );
+						}
+						$wp_query_args['posts_per_page'] = $psc_ppp;
 							  $wp_query_args['orderby'] = $settings['sort_by'];
 							if ( '2' == $settings['sort_direction'] ) {
 								$wp_query_args['order'] = 'desc';
@@ -2817,7 +3430,28 @@ function psc_print_post_slider_carousel_func( $atts ) {
 								}
 							}
 
-							 $my_query = new WP_Query( $wp_query_args );
+							 // Related posts mode replaces the configured query with one that matches the
+			// current post's categories. It runs last so it always wins.
+			$psc_related_on = ( isset( $settings['related_mode'] ) && intval( $settings['related_mode'] ) ) || $psc_atts_related;
+			if ( $psc_related_on ) {
+
+				$psc_related_args = psc_get_related_query_args( $settings, $psc_atts_count );
+				if ( false !== $psc_related_args ) {
+
+					$wp_query_args = $psc_related_args;
+				} else {
+
+					// Not a singular view, or no terms to match - render nothing rather
+					// than falling back to an unrelated list of posts. The output buffer
+					// is already open at this point, so discard it before returning or
+					// the buffered markup leaks into the response (which breaks the REST
+					// API responses the block editor relies on).
+					ob_end_clean();
+					return '';
+				}
+			}
+
+			$my_query = new WP_Query( $wp_query_args );
 
 							if ( $my_query->have_posts() ) {
 
@@ -3150,14 +3784,17 @@ function psc_print_post_slider_carousel_func( $atts ) {
 		return $output;
 }
 
-function psc_get_excerpt( $post_id ) {
+function psc_get_excerpt( $post_id, $excerpt_length = 20 ) {
 
 	   $the_post = get_post( $post_id ); // Gets post ID
 	   $the_excerpt = $the_post->post_content; // Gets post_content to be used as a basis for the excerpt
 	if ( get_the_excerpt( $post_id ) != '' ) {
 		$the_excerpt = get_the_excerpt( $post_id );
 	}
-	   $excerpt_length = 20;// Sets excerpt length by word count
+	   $excerpt_length = intval( $excerpt_length );// Sets excerpt length by word count
+	if ( $excerpt_length < 1 ) {
+		$excerpt_length = 20;
+	}
 	   $the_excerpt = strip_tags( strip_shortcodes( $the_excerpt ) ); // Strips tags and images
 	   $words = explode( ' ', $the_excerpt, $excerpt_length + 1 );
 	if ( count( $words ) > $excerpt_length ) :
@@ -3175,11 +3812,206 @@ function psc_get_excerpt( $post_id ) {
 	}
 	   return $the_excerpt;
 }
+/**
+ * Returns the terms to show as filter tabs for a grid, derived from the grid's own
+ * post type and category settings so the tabs can never show an empty result.
+ */
+add_action( 'wp_ajax_psc_filter_grid', 'psc_filter_grid_callback' );
+add_action( 'wp_ajax_nopriv_psc_filter_grid', 'psc_filter_grid_callback' );
+
+/**
+ * Re-renders the grid for a single filter term. Public endpoint: it only ever
+ * outputs the same posts the grid would already show, and the term is validated
+ * against the grid's own allowed terms.
+ */
+function psc_filter_grid_callback() {
+
+	check_ajax_referer( 'psc_filter_grid', 'nonce' );
+
+	$psc_term = isset( $_POST['psc_term'] ) ? intval( $_POST['psc_term'] ) : 0;
+
+	$psc_settings = get_option( 'psc_pgrid_settings' );
+	if ( ! is_array( $psc_settings ) || empty( $psc_settings['show_filter'] ) ) {
+
+		wp_send_json_error( array( 'message' => __( 'Filtering is not enabled.', 'post-slider-carousel' ) ), 400 );
+	}
+
+	if ( $psc_term > 0 ) {
+
+		$psc_allowed = array_map( 'intval', wp_list_pluck( psc_get_filter_terms( $psc_settings ), 'term_id' ) );
+		if ( ! in_array( $psc_term, $psc_allowed, true ) ) {
+
+			wp_send_json_error( array( 'message' => __( 'Unknown category.', 'post-slider-carousel' ) ), 400 );
+		}
+	}
+
+	// psc_get_active_filter_term() reads $_REQUEST, which already holds psc_term.
+	$psc_html = do_shortcode( '[psc_print_post_grid]' );
+
+	wp_send_json_success( array( 'html' => $psc_html ) );
+}
+
+function psc_get_filter_terms( $settings ) {
+
+	$psc_post_types = isset( $settings['post_type'] ) ? $settings['post_type'] : 'post';
+	$psc_post_types = array_filter( array_map( 'trim', explode( ',', $psc_post_types ) ) );
+	if ( empty( $psc_post_types ) ) {
+
+		$psc_post_types = array( 'post' );
+	}
+
+	$psc_taxonomy = 'category';
+	$psc_terms    = array();
+
+	// Only offer terms that actually have posts of the right type.
+	$psc_all = get_terms(
+		array(
+			'taxonomy'   => $psc_taxonomy,
+			'hide_empty' => true,
+		)
+	);
+
+	if ( is_wp_error( $psc_all ) || empty( $psc_all ) ) {
+
+		return array();
+	}
+
+	$psc_configured = isset( $settings['post_category'] ) ? trim( $settings['post_category'] ) : '';
+	$psc_mode       = isset( $settings['categories_include_exclude'] ) ? intval( $settings['categories_include_exclude'] ) : 0;
+
+	if ( '' !== $psc_configured ) {
+
+		$psc_ids = array_filter( array_map( 'intval', explode( ',', $psc_configured ) ) );
+
+		foreach ( $psc_all as $psc_term ) {
+
+			$psc_in_list = in_array( $psc_term->term_id, $psc_ids, true );
+
+			// mode 0 = exclude these, mode 1 = include only these
+			if ( ( 0 === $psc_mode && ! $psc_in_list ) || ( 1 === $psc_mode && $psc_in_list ) ) {
+
+				$psc_terms[] = $psc_term;
+			}
+		}
+	} else {
+
+		$psc_terms = $psc_all;
+	}
+
+	return $psc_terms;
+}
+
+/**
+ * The term currently being filtered on, from the AJAX request or the query string.
+ * Returns 0 for "all".
+ */
+function psc_get_active_filter_term() {
+
+	if ( isset( $_REQUEST['psc_term'] ) ) {
+
+		return intval( $_REQUEST['psc_term'] );
+	}
+
+	return 0;
+}
+
+function psc_get_related_query_args( $settings, $limit = 0 ) {
+
+	if ( ! is_singular() ) {
+
+		return false;
+	}
+
+	$psc_post_id = get_queried_object_id();
+	if ( ! $psc_post_id ) {
+
+		return false;
+	}
+
+	$psc_post_type = get_post_type( $psc_post_id );
+
+	// Free version matches on categories only. The Pro version can also match on
+	// tags and any custom taxonomy.
+	$psc_taxonomy = 'category';
+	if ( ! is_object_in_taxonomy( $psc_post_type, $psc_taxonomy ) ) {
+
+		return false;
+	}
+
+	$psc_terms = wp_get_post_terms( $psc_post_id, $psc_taxonomy, array( 'fields' => 'ids' ) );
+	if ( is_wp_error( $psc_terms ) || empty( $psc_terms ) ) {
+
+		return false;
+	}
+
+	if ( $limit < 1 ) {
+
+		$limit = isset( $settings['related_count'] ) ? intval( $settings['related_count'] ) : 4;
+	}
+	if ( $limit < 1 ) {
+
+		$limit = 4;
+	}
+
+	$psc_args = array(
+		'post_type'           => $psc_post_type,
+		'post_status'         => 'publish',
+		'posts_per_page'      => $limit,
+		'post__not_in'        => array( $psc_post_id ),
+		'ignore_sticky_posts' => 1,
+		'tax_query'           => array(
+			array(
+				'taxonomy' => $psc_taxonomy,
+				'field'    => 'term_id',
+				'terms'    => $psc_terms,
+				'operator' => 'IN',
+			),
+		),
+	);
+
+	if ( is_user_logged_in() && current_user_can( 'read_private_posts' ) ) {
+
+		$psc_args['post_status'] = array( 'publish', 'private' );
+	}
+
+	if ( isset( $settings['sort_by'] ) && '' !== $settings['sort_by'] ) {
+
+		$psc_args['orderby'] = $settings['sort_by'];
+		$psc_args['order']   = ( isset( $settings['sort_direction'] ) && '1' == $settings['sort_direction'] ) ? 'asc' : 'desc';
+	}
+
+	// Additional posts the user excluded in the settings still apply.
+	if ( ! empty( $settings['post_exclude'] ) ) {
+
+		$psc_excluded = array_filter( array_map( 'intval', explode( ',', $settings['post_exclude'] ) ) );
+		if ( ! empty( $psc_excluded ) ) {
+
+			$psc_args['post__not_in'] = array_merge( $psc_args['post__not_in'], $psc_excluded );
+		}
+	}
+
+	return $psc_args;
+}
+
 function psc_print_post_grid_func( $atts ) {
+
+	$psc_atts = shortcode_atts(
+		array(
+			'related'       => '',
+			'related_count' => 0,
+		),
+		$atts
+	);
+	$psc_atts_related = ( '1' === (string) $psc_atts['related'] || 'true' === strtolower( (string) $psc_atts['related'] ) );
+	$psc_atts_count   = intval( $psc_atts['related_count'] );
 
 	global $wpdb;
 	$rand_Numb = uniqid( 'psc_grid' );
 	$settings = get_option( 'psc_pgrid_settings' );
+	$psc_grid_style = ( is_array( $settings ) && isset( $settings['grid_style'] ) ) ? $settings['grid_style'] : 'default';
+	if ( ! in_array( $psc_grid_style, array( 'default', 'list' ), true ) ) {
+		$psc_grid_style = 'default';
+	}
 
 	$uploads = wp_upload_dir();
 	$baseDir = $uploads ['basedir'];
@@ -3208,6 +4040,18 @@ function psc_print_post_grid_func( $atts ) {
 	 .list-groupupdate-item-text{color:<?php echo esc_html( $settings['content_cl'] ); ?>}
 	 .rmore{color:<?php echo esc_html( $settings['read_more_cl'] ); ?>;border:none;box-shadow:none !important  }
 	 .rmore:hover{color:<?php echo esc_html( $settings['read_more_hcl'] ); ?>;border:none;box-shadow:none !important }
+	<?php if ( 'list' === $psc_grid_style ) { ?>
+	.psc_style_list .item___{width:100% !important;max-width:100% !important;float:none !important;margin:0 0 22px 0 !important;display:grid;grid-template-columns:minmax(140px,320px) 1fr;grid-column-gap:18px;position:static !important;}
+	.psc_style_list .item___ > img{grid-row:1 / span 3;grid-column:1;width:100%;height:100%;object-fit:cover;margin:0;}
+	.psc_style_list .item___ .list-groupupdate-item-heading{grid-column:2;}
+	.psc_style_list .item___ .caption{grid-column:2;}
+	.psc_style_list .item___ .entry-footer-{grid-column:2;}
+	@media (max-width:640px){
+	.psc_style_list .item___{grid-template-columns:1fr;}
+	.psc_style_list .item___ > img{grid-row:auto;grid-column:1;height:auto;}
+	.psc_style_list .item___ .list-groupupdate-item-heading, .psc_style_list .item___ .caption, .psc_style_list .item___ .entry-footer-{grid-column:1;}
+	}
+	<?php } ?>
 	</style>
 	<?php
 			$wpcurrentdir = __DIR__;
@@ -3217,7 +4061,45 @@ function psc_print_post_grid_func( $atts ) {
 	   
 	   <div class="max-width" >
 	
-		   <div id="container" class="main_grid_div" style="display:none">
+		   <?php
+		   $psc_grid_uid = $rand_Numb;
+		   $psc_show_filter = ! empty( $settings['show_filter'] );
+		   $psc_filter_terms = $psc_show_filter ? psc_get_filter_terms( $settings ) : array();
+		   $psc_active_term = psc_get_active_filter_term();
+		   // Related mode has its own query, so tabs would be meaningless there.
+		   // NOTE: $psc_related_on is computed further down, next to the query. Recompute
+		   // the same condition here rather than relying on a variable that does not
+		   // exist yet at this point in the function.
+		   $psc_related_here = ( isset( $settings['related_mode'] ) && intval( $settings['related_mode'] ) ) || $psc_atts_related;
+		   if ( $psc_related_here ) {
+			   $psc_show_filter = false;
+			   $psc_filter_terms = array();
+		   }
+		   ?>
+		   <?php if ( $psc_show_filter && count( $psc_filter_terms ) > 0 ) { ?>
+		   <div class="psc_filter_bar" data-grid="<?php echo esc_attr( $psc_grid_uid ); ?>">
+			   <button type="button" class="psc_filter_btn<?php echo ( 0 === $psc_active_term ) ? ' psc_filter_active' : ''; ?>" data-term="0"><?php echo esc_html( isset( $settings['filter_all_text'] ) && '' !== trim( $settings['filter_all_text'] ) ? $settings['filter_all_text'] : __( 'All', 'post-slider-carousel' ) ); ?></button>
+			   <?php foreach ( $psc_filter_terms as $psc_term ) { ?>
+				   <button type="button" class="psc_filter_btn<?php echo ( $psc_active_term === $psc_term->term_id ) ? ' psc_filter_active' : ''; ?>" data-term="<?php echo esc_attr( $psc_term->term_id ); ?>"><?php echo esc_html( $psc_term->name ); ?></button>
+			   <?php } ?>
+			   <span class="psc_filter_spinner" aria-hidden="true"></span>
+		   </div>
+		   <?php } ?>
+		   <style>
+		   #container<?php echo esc_attr( $psc_grid_uid ); ?>.psc_grid_hidden{display:none;}
+		   .psc_filter_bar{margin:0 0 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+		   .psc_filter_btn{background:transparent;border:1px solid #d0d0d0;border-radius:999px;padding:6px 16px;font-size:14px;line-height:1.4;cursor:pointer;color:inherit;transition:background .15s ease,border-color .15s ease,color .15s ease;}
+		   .psc_filter_btn:hover{border-color:#8524de;color:#8524de;}
+		   .psc_filter_btn.psc_filter_active{background:#8524de;border-color:#8524de;color:#fff;}
+		   .psc_filter_btn[disabled]{opacity:.5;cursor:default;}
+		   .psc_filter_spinner{display:none;width:16px;height:16px;border:2px solid #d0d0d0;border-top-color:#8524de;border-radius:50%;animation:psc_spin .6s linear infinite;}
+		   .psc_filter_bar.psc_loading .psc_filter_spinner{display:inline-block;}
+		   @keyframes psc_spin{to{transform:rotate(360deg);}}
+		   .psc_grid_container{transition:opacity .15s ease;}
+		   .psc_grid_container.psc_loading{opacity:.45;}
+		   @media (prefers-reduced-motion:reduce){.psc_filter_spinner{animation:none;}.psc_grid_container{transition:none;}}
+		   </style>
+		   <div id="container<?php echo esc_attr( $psc_grid_uid ); ?>" class="main_grid_div psc_grid_container psc_style_<?php echo esc_attr( $psc_grid_style ); ?> psc_grid_hidden" data-cols="<?php echo esc_attr( isset( $settings['cols'] ) ? intval( $settings['cols'] ) : 4 ); ?>" data-cols1024="<?php echo esc_attr( isset( $settings['cols1024'] ) ? intval( $settings['cols1024'] ) : 3 ); ?>" data-cols800="<?php echo esc_attr( isset( $settings['cols800'] ) ? intval( $settings['cols800'] ) : 2 ); ?>" data-cols640="<?php echo esc_attr( isset( $settings['cols640'] ) ? intval( $settings['cols640'] ) : 1 ); ?>">
 	  
 
 			<?php
@@ -3244,8 +4126,18 @@ function psc_print_post_grid_func( $atts ) {
 
 						$wp_query_args = array();
 						$wp_query_args['post_type'] = $postTypesTouse;
-						$wp_query_args['posts_per_page'] = $settings['max_post_retrive'];
-						$wp_query_args['post_status'] = array( 'publish', 'private' );
+						$psc_ppp = intval( $settings['max_post_retrive'] );
+						if ( $psc_ppp < 1 ) {
+
+							// -1 means "all posts". Fetching every post at once exhausts memory on
+							// large sites, since each one also gets a resized thumbnail generated.
+							$psc_ppp = apply_filters( 'psc_max_posts_per_page', 200 );
+						}
+						$wp_query_args['posts_per_page'] = $psc_ppp;
+						$wp_query_args['post_status'] = 'publish';
+							if ( is_user_logged_in() && current_user_can( 'read_private_posts' ) ) {
+								$wp_query_args['post_status'] = array( 'publish', 'private' );
+							}
 			if ( -1 != $settings['max_post_retrive'] && 1 == $settings['show_pager'] ) {
 
 				$wp_query_args['paged'] = ( isset( $atts['paged'] ) && '' != $atts['paged'] ) ? $atts['paged'] : $paged;
@@ -3321,7 +4213,48 @@ function psc_print_post_grid_func( $atts ) {
 				}
 			}
 
-					   $my_query = new WP_Query( $wp_query_args );
+					   // Related posts mode replaces the configured query with one that matches the
+			// current post's categories. It runs last so it always wins.
+			$psc_related_on = ( isset( $settings['related_mode'] ) && intval( $settings['related_mode'] ) ) || $psc_atts_related;
+			if ( $psc_related_on ) {
+
+				$psc_related_args = psc_get_related_query_args( $settings, $psc_atts_count );
+				if ( false !== $psc_related_args ) {
+
+					$wp_query_args = $psc_related_args;
+				} else {
+
+					// Not a singular view, or no terms to match - render nothing rather
+					// than falling back to an unrelated list of posts. The output buffer
+					// is already open at this point, so discard it before returning or
+					// the buffered markup leaks into the response (which breaks the REST
+					// API responses the block editor relies on).
+					ob_end_clean();
+					return '';
+				}
+			}
+
+			// A filter tab narrows the query to a single category. It runs after the
+			// configured category logic so the tab always wins, and never in related
+			// mode (where the query is chosen by the post being viewed).
+			$psc_filter_term = psc_get_active_filter_term();
+			if ( ! $psc_related_on && $psc_filter_term > 0 && ! empty( $settings['show_filter'] ) ) {
+
+				$psc_allowed = array_map( 'intval', wp_list_pluck( psc_get_filter_terms( $settings ), 'term_id' ) );
+				if ( in_array( $psc_filter_term, $psc_allowed, true ) ) {
+
+					$wp_query_args['tax_query'] = array(
+						array(
+							'taxonomy' => 'category',
+							'field'    => 'term_id',
+							'terms'    => array( $psc_filter_term ),
+							'operator' => 'IN',
+						),
+					);
+				}
+			}
+
+			$my_query = new WP_Query( $wp_query_args );
 
 					   $imageheight = 218;
 					   $imagewidth = 388;
@@ -3390,7 +4323,7 @@ function psc_print_post_grid_func( $atts ) {
 							  $rowTitle = str_replace( "'", '’', $rowTitle );
 							  $rowTitle = str_replace( '"', '”', $rowTitle );
 
-							  $excerpt = psc_get_excerpt( get_the_ID() );
+							  $excerpt = psc_get_excerpt( get_the_ID(), isset( $settings['excerpt_length'] ) ? intval( $settings['excerpt_length'] ) : 20 );
 							  $permalink = get_the_permalink( get_the_ID() );
 
 					?>
@@ -3401,20 +4334,35 @@ function psc_print_post_grid_func( $atts ) {
 								<div class="group inner list-groupupdate-item-heading"><a href="<?php echo esc_attr( esc_url( $permalink ) ); ?>" ><?php echo esc_html( $rowTitle ); ?></a></div>
 								<div class="caption">
 
+									<?php
+									$psc_show_date = ! isset( $settings['show_date'] ) || intval( $settings['show_date'] );
+									$psc_show_author = ! isset( $settings['show_author'] ) || intval( $settings['show_author'] );
+									$psc_show_comments = ! isset( $settings['show_comments'] ) || intval( $settings['show_comments'] );
+									if ( $psc_show_date || $psc_show_author || $psc_show_comments ) {
+									?>
 									<ul class="pmeta">
 										<li class="time"> 
-
+											<?php if ( $psc_show_date ) { ?>
 											<span><i class="fa fa-calendar pmetaicon"></i>  <?php echo esc_html( get_the_date() ); ?>&nbsp;&nbsp;</span>
+											<?php } ?>
+											<?php if ( $psc_show_author ) { ?>
 											<span><i class="fa fa-user pmetaicon"></i> <?php echo esc_html( get_the_author() ); ?>&nbsp;&nbsp;</span>
+											<?php } ?>
+											<?php if ( $psc_show_comments ) { ?>
 											<span><i class="fa fa-comment pmetaicon"></i>&nbsp; <?php esc_html( comments_number( '0', '0', '%' ) ); ?></span>
+											<?php } ?>
 										</li>
 									</ul>
+									<?php } ?>
+									<?php if ( ! isset( $settings['show_excerpt'] ) || intval( $settings['show_excerpt'] ) ) { ?>
 									<p class="group inner list-groupupdate-item-text" >
 										<?php echo esc_html( ( trim( $excerpt ) != '' ) ? $excerpt : '&nbsp;' ); ?>
 									</p>
+									<?php } ?>
 
 
 							   </div>
+								<?php if ( ! isset( $settings['show_readmore'] ) || intval( $settings['show_readmore'] ) ) { ?>
 								<div class="entry-footer-" >
 								   
 									<div class="colupdate-md-12 colupdate-lg-12 colupdate-xs-12">
@@ -3422,6 +4370,7 @@ function psc_print_post_grid_func( $atts ) {
 											<?php echo esc_html( $settings['readMore_text'] ); ?>&nbsp;<i class="fa fa-angle-double-right"></i></a>
 									</div>
 							   </div>
+								<?php } ?>
 
 						  </div>
 
@@ -3467,8 +4416,9 @@ function psc_print_post_grid_func( $atts ) {
 					   clearInterval(<?php echo esc_html( $intval ); ?>);
 					   
 						
-						jQuery(".main_grid_div").show();
-						jQuery("#container").wrecker({
+						jQuery("#container<?php echo esc_js( $psc_grid_uid ); ?>").removeClass("psc_grid_hidden");
+						<?php if ( 'default' === $psc_grid_style ) { ?>
+						jQuery("#container<?php echo esc_js( $psc_grid_uid ); ?>").wrecker({
 								// options
 								itemSelector : ".<?php echo esc_html( $rand_Numb ); ?>",
 								maxColumns : <?php echo esc_html( $settings['cols'] ); ?>,
@@ -3478,7 +4428,8 @@ function psc_print_post_grid_func( $atts ) {
 										{800  : <?php echo esc_html( $settings['cols800'] ); ?>},
 										{640  : <?php echo esc_html( $settings['cols640'] ); ?>}
 								]
-						   });     
+						   });
+						<?php } ?>     
 	
 					}    
 	   

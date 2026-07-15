@@ -1,180 +1,196 @@
-=== Post Sliders & Post Grids ===
+=== Post Grid & Post Slider - Carousel, Filter Tabs & Related Posts ===
 
-Contributors:nik00726
-Donate link:http://www.i13websolution.com/donate-wordpress_image_thumbnail.php
-Tags:Post Grid,Custom Post Grid,post Grid Display,latest post slider,advance post slider,post thumbnail slider,responsive recent post slider,recent post slider,responsive post slider,post carousel,responsive posts carousel,post carousel widget,post thumbnail slider
-Requires at least:3.5
-Tested up to:7.0
-Version:1.0.22
-Stable tag:1.0.22
-License:GPLv2 or later
-License URI:http://www.gnu.org/licenses/gpl-2.0.html
+Contributors: nik00726
+Donate link: http://www.i13websolution.com/donate-wordpress_image_thumbnail.php
+Tags: post grid, post carousel, related posts, post filter, gutenberg block
+Requires at least: 5.0
+Tested up to: 7.0
+Requires PHP: 7.0
+Stable tag: 1.0.23
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Post Slider & Grid is beautiful responsive post thumbnail image slider and also support post grid display.It support post exclusion/inclusion, Category exclusion/inclusion and also support custom post type inclusion/exclusion.
-
+Display posts in a responsive grid or slider. Category filter tabs, related posts, Gutenberg block and shortcode. No coding needed.
 
 == Description ==
 
-Post Sliders & Grids is a beautiful responsive post thumbnail image slider as well as post grid plugin. It supports post exclution, Category exclution/inclusion and also supports custom post type exclution or inclution. Admin can easily create responsive post slider or post grid within a minute. Admin can exclude/inclusion post type, categories exclude/inclusion. Admin can also specify sorting by date,title,author,name,random,comment count etc.Admin can change thumbnail height width also admin can change settings to show/hide pager caption etc.
+**Show your posts as a responsive post grid or a post slider carousel - in about a minute, without touching code.**
 
+Pick your categories, choose a layout, and drop it anywhere with the Gutenberg block or a shortcode. Works with posts, pages and any custom post type.
 
+https://www.youtube.com/watch?v=qIo1TLGV5Pk
 
-**Find WordPress Post Sliders & Post Grids Pro Plugin(Unlimited Slider+Vertical Post Slider + Post Grids) at [Post Sliders & Grids](https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/)**
+= What you can build =
 
-**[Live Demo WordPress Post Grids](http://blog.i13websolution.com/wordpress-post-grid-live-preview/)**
+* **Post grid** - a responsive blog grid with the columns you choose for desktop, laptop, tablet and phone
+* **Post slider / carousel** - a horizontal thumbnail carousel of your latest posts, with autoplay and pause on hover
+* **Related posts** - posts from the same category as the post being read, shown under your content
+* **Filterable grid** - category tabs above the grid so visitors filter without reloading the page
 
-**[Live Demo WordPress Vertical Post Slider Pro](http://blog.i13websolution.com/live-preview-vertical-post-slider/)**
+= Category filter tabs =
 
-**[Live Demo WordPress Horizontal Post Slider Pro](http://blog.i13websolution.com/live-preview-horizontal-post-slider/)**
+Let readers narrow the grid to the category they care about. Click a tab, the grid updates instantly - no page reload.
 
+The tabs are built from the categories your grid is already set to show, so a tab can never come up empty. Turn it on with one checkbox.
 
-**[Live Demo WordPress Latest Post Slider Pro](http://blog.i13websolution.com/live-preview-latest-post-slider/)**
+= Related posts, without another plugin =
 
-**Post Slider Video**
+Keep readers on your site by showing related posts under each article. Match by category, choose how many to show, and display them as a grid or a slider. The post being read is excluded automatically.
 
-[youtube https://www.youtube.com/watch?v=YCkhxBkALck]
+Add `related="1"` to the shortcode, or flip the toggle in the block:
 
+`[psc_print_post_grid related="1"]`
 
-**Post Grid Video**
+= Post grid features =
 
-[youtube https://www.youtube.com/watch?v=qIo1TLGV5Pk]
+* Responsive grid with independent column counts for desktop, 1024px, 800px and 640px
+* Two layouts: Default and List
+* Category filter tabs with instant AJAX filtering
+* Include or exclude categories, post types, and individual posts
+* Choose what each card shows: excerpt, date, author, comment count, Read More
+* Set your own excerpt length
+* Colour pickers for heading, meta, content and Read More link
+* Sort by date, title, author, name, random or comment count
+* Live preview before you publish
+* Gutenberg block and shortcode
 
+= Post slider features =
 
+* Responsive thumbnail slider / carousel
+* Autoplay with pause on mouse over
+* Captions and pager, both optional
+* Set thumbnail width and height
+* Custom link support per post
+* Include or exclude categories, post types, and individual posts
+* Sort by date, title, author, name, random or comment count
+* Live preview before you publish
+* Gutenberg block and shortcode
 
-**Please rate this plugin if you find it useful**
+= Works with your setup =
 
+* Any theme - the grid and slider inherit your fonts
+* Any custom post type, including WooCommerce products
+* Block editor, Classic editor, or a PHP template call
+* Multisite
+* Translation ready
+* WordPress capabilities, so you control which roles can manage sliders and grids
 
-**=Features Post Slider=**
+= Live demos =
 
+* [Post grid demo](http://blog.i13websolution.com/wordpress-post-grid-live-preview/)
+* [Horizontal post slider demo](http://blog.i13websolution.com/live-preview-horizontal-post-slider/)
+* [Vertical post slider demo](http://blog.i13websolution.com/live-preview-vertical-post-slider/)
 
-1. Category exclution or inclution.
+= What you get for free =
 
-2. Post exclusion.
+Everything above is in the free plugin. One slider and one grid, both fully working - not a trial, not time limited, no feature nagging inside the settings.
 
-3. Custom post type exclution or inclution.
+That is enough for most sites: a grid on your blog page, filter tabs so readers can narrow it down, and related posts under each article.
 
-4. Custom link support for post.
+= When you would want Pro =
 
-5. Support Max number of post.
+Pro exists for people who outgrow one grid. You would know if that is you:
 
-6. Preview your circle slider before use it.
+* **You need more than one.** Different grids on different pages, each with its own categories, columns and colours. Free saves one configuration; Pro saves as many as you like.
+* **You want a layout with more character.** Pro adds Masonry, Overlay and Magazine to the Default and List layouts you already have.
+* **Your related posts should be smarter.** Match on tags or any custom taxonomy instead of categories, sort so the closest matches come first, and insert them under every article automatically without editing a template.
+* **You want to know what works.** Pro records clicks per grid and per post, so you can see which placement earns attention and which quietly does nothing. No visitor data is stored - just daily counters.
+* **Your filter tabs need to do more.** Any taxonomy, a dropdown instead of buttons, multi select, post counts, and a preselected term.
+* **You want the slider to do more.** Vertical sliding, continuous ticker mode, 16 easing effects, AJAX pagination and social sharing buttons.
 
-7. Support sort by.
+One payment, no subscription. [See the Pro version and live demos](https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/)
 
-8. changes to images height,width
-
-9. Support Caption
-
-10. Admin can set slider as slide with arrow left and right arrow.
-
-11. Create Post grid easly.
-
-12. WordPress capabilities feature.
-
-
-
-**=Post Slider Pro Features(Add On)=**
-
-
-1. Unlimited Slider(Multiple sliders).
-
-2. Support Horizontal and Vertical Post Slider Carousel.
-
-3. Support Horizontal Ticker(continuous) Post Carousel Slider.
-
-4. Support Vertical Ticker(continuous) Post Carousel Slider.
-
-5. 16 easing effects.
-
-6. Custom link support for post.
-
-6. You can use as recent(Latest) Post Slider
-
-7. WordPress capabilities feature.
-
-
-
-
-
-**=Features Post Grids=**
-
-
-1. Category exclution or inclution.
-
-2. Post exclusion.
-
-3. Custom post type exclution or inclution.
-
-4. Support Max number of post.
-
-5. Preview your Post Grid before use.
-
-6. Support sort by.
-
-10. Create Post grid easly.
-
-11. WordPress capabilities feature.
-
-
-
-**=Post Grids Pro Features(Add On)=**
-
-1. Unlimited Post Grids.
-
-2. Ajax pagination in grid
-
-3. Social sharing in post grids
-
-4. WordPress capabilities feature
-
-
-[Get Support](https://www.i13websolution.com/contacts)
-
+[Get support](https://www.i13websolution.com/contacts)
 
 == Installation ==
 
+1. In your WordPress admin, go to **Plugins > Add New** and search for "Post Grid & Post Slider", or upload the `post-slider-carousel` folder to `/wp-content/plugins/`.
+2. Activate the plugin.
+3. Go to **Post Slider & Grid** in the admin menu and set up your slider or grid.
+4. Add it to a page:
+   * **Block editor:** add the "Post Slider & Grid" block, then pick Slider or Grid in the sidebar.
+   * **Shortcode:** `[psc_print_post_grid]` or `[psc_print_post_slider_carousel]`
+   * **Theme file:** `<?php echo do_shortcode('[psc_print_post_grid]'); ?>`
+5. For related posts, add `related="1"` to the shortcode, or turn on Related Posts in the settings.
 
-This plugin is easy to install like other plug-ins of Wordpress as you need to just follow the below mentioned steps:
+== Frequently Asked Questions ==
 
-1. upload post-slider-carousel/ folder to wp-Content/plugins folder.
+= How do I show related posts under my articles? =
 
-2. Activate the plugin from Dashboard / Plugins window.
+Turn on Related Posts in the grid settings, then place `[psc_print_post_grid related="1"]` where you want them - usually in your theme's `single.php`, below the content. The plugin matches posts by category and leaves out the post being read.
 
-4. Now Plugin is Activated, Go to the Usage section to see how to use Circle Slider plus Lightbox.
+Related mode only renders on a single post. On an archive or a page it shows nothing, which is intentional.
 
-### Usage ###
+Pro can insert them automatically under every post, so you never touch a template file.
 
-1.Use of Post Slider/Post Grid  easly after activating plugin go to post sliders and Grid.
+= Can visitors filter the grid by category? =
 
-2.You can set desired settings.
+Yes. Switch on "Category filter tabs" in the grid settings and buttons appear above the grid. Clicking one filters without reloading the page.
 
-3.You can preview slider/grid.
+The tabs only list categories your grid is allowed to show, so a visitor can never land on an empty result.
 
-4.You can add this slider to your wordpress page/post by adding this shortcode to [psc_print_post_slider_carousel]  OR you can add this to 
-  your theme   by adding this code echo do_shortcode('[psc_print_post_slider_carousel]'); to your theme
+= Does it work with custom post types? =
 
-5.You can add this post grid to your wordpress page/post by adding this shortcode to [psc_print_post_grid]   OR you can add this to 
-  your theme   by adding this code echo do_shortcode('[psc_print_post_grid] '); to your theme
+Yes. Any registered public post type, including WooCommerce products. Choose it under "Post types to include or exclude".
 
+= Will it work with my theme? =
+
+Yes. The grid and slider inherit your theme's fonts, and you can set your own colours for headings, meta text, content and the Read More link.
+
+= Does it work in the block editor? =
+
+Yes, there is a native "Post Slider & Grid" block. Add it, choose Slider or Grid, and pick your settings in the sidebar. Shortcodes work too, in the Classic editor or a Shortcode block.
+
+= Can I put more than one grid on the same page? =
+
+The free version has one saved configuration, which you can place more than once. If you need several grids with different settings on one page, that is what the Pro version's unlimited grids are for.
+
+= Why is my masonry grid not staggering? =
+
+Masonry is a Pro layout, and it needs two things to look different from a normal grid: image cropping switched off, and featured images with different heights. If every image is the same shape, every card is the same height, and masonry looks like the default grid.
+
+= Are private or password protected posts shown? =
+
+No. Only published posts your visitors are allowed to see.
+
+= Does the plugin slow my site down? =
+
+It loads its CSS and JavaScript only on pages where a slider or grid is actually present. There is no tracking, no external requests and no fonts loaded from third parties.
+
+= Is my data sent anywhere? =
+
+No. The plugin makes no external requests and sets no cookies.
+
+= How do I get help? =
+
+Ask in the [support forum](https://wordpress.org/support/plugin/post-slider-carousel/), or [contact us directly](https://www.i13websolution.com/contacts).
 
 == Screenshots ==
 
-1. Slider Settings
-2. Slider Preview
-3. Pro Version Manage Sliders
-4. Pro Version Slider Settings
-5. Pro Version Slider Preview
-6. Post Grid Preview
-7. Post Grid Settings
-8. Pro version unlimited post grids
-
-
-== License ==
-
-This plugin is free for everyone! Since it's released under the GPL, you can use it free of charge on your personal or commercial blog. But you can make some donations if you realy find it useful.
-
+1. Post grid on the front end
+2. Category filter tabs above the grid
+3. Related posts shown under an article
+4. Post grid settings
+5. Post slider on the front end
+6. Post slider settings
+7. The Post Slider & Grid block in the editor
+8. Live preview before you publish
 
 == Changelog ==
+
+= 1.0.23 =
+
+* New: category filter tabs for grids. Visitors filter the grid without a page reload
+* New: related posts. Show posts from the same category as the post being read, as a grid or a slider
+* New: choose what each card shows - excerpt, date, author, comment count, Read More link - and set your own excerpt length
+* New: List layout for grids
+* New: Gutenberg block for both the slider and the grid
+* Fixed: private and password protected posts are no longer shown to visitors
+* Fixed: tapping a post on a mobile device now opens it correctly
+* Fixed: two grids on the same page no longer interfere with each other
+* Fixed: "Maximum posts to retrieve" set to -1 no longer exhausts memory on large sites
+* Improved: settings screen tidied up, with clearer help text
+
 
 = 1.0.22 =
 
@@ -269,8 +285,8 @@ This plugin is free for everyone! Since it's released under the GPL, you can use
 
 = 1.0.4 =
 
-* Currently you can only exclude post types, Now added option to exclude or include post types. 
-* Currently you can only exclude post categories, Now added option to exclude or include categories. 
+* Currently you can only exclude post types, Now added option to exclude or include post types.
+* Currently you can only exclude post categories, Now added option to exclude or include categories.
 
 
 = 1.0.3 =
@@ -326,11 +342,9 @@ This plugin is free for everyone! Since it's released under the GPL, you can use
 
 = 1.0 =
 
-* Stable 1.0 first release
+== Upgrade Notice ==
 
+= 1.0.23 =
 
-== Frequently asked questions ==
+Adds category filter tabs and related posts. Fixes private posts being visible to visitors, mobile tap not opening posts, and two grids clashing on one page. Recommended for everyone.
 
-1.How to use ?
-
-For More info use readme installation and usage notes.
