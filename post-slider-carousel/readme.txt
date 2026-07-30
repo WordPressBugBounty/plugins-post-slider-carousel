@@ -18,6 +18,8 @@ Display posts in a responsive grid or slider. Category filter tabs, related post
 
 Pick your categories, choose a layout, and drop it anywhere with the Gutenberg block or a shortcode. Works with posts, pages and any custom post type.
 
+**[⭐ Get the Pro Version — Multiple sliders and grid, Pro adds Masonry, Overlay and Magazine etc and more →](https://www.i13websolution.com/product/wordpress-post-sliders-and-post-grids/)**
+
 https://www.youtube.com/watch?v=qIo1TLGV5Pk
 
 = What you can build =
@@ -175,6 +177,8 @@ Ask in the [support forum](https://wordpress.org/support/plugin/post-slider-caro
 6. Post slider settings
 7. The Post Slider & Grid block in the editor
 8. Live preview before you publish
+9. Gutenberg post slider/Grid add/editing
+10.Post Grid Listview
 
 == Changelog ==
 
